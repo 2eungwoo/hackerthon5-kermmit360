@@ -1,13 +1,12 @@
 package hackathon.kermmit360.auth.signup;
 
-import hackathon.kermmit360.common.util.finder.EntityFinder;
+import hackathon.kermmit360.github.service.GithubEventService;
 import hackathon.kermmit360.global.error.ErrorCode;
 import hackathon.kermmit360.global.error.exception.CustomException;
 import hackathon.kermmit360.member.entity.MemberEntity;
 import hackathon.kermmit360.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
