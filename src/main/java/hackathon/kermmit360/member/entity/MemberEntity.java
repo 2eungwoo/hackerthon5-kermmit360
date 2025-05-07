@@ -26,9 +26,6 @@ public class MemberEntity {
     @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "push_count", nullable = false)
-    private int pushCount = 0;
-
     @Column(name = "role", nullable = false)
     private String role;
 
@@ -51,7 +48,6 @@ public class MemberEntity {
 
     public void addPushCount() {
         addExp();
-        this.pushCount++;
     }
 
     public void addExp() {
