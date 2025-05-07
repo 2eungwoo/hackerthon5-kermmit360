@@ -10,7 +10,4 @@ public class SigninController {
     public String signin(){
         return "signin";
     }
-
-
-
 }

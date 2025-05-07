@@ -1,5 +1,6 @@
 package hackathon.kermmit360.auth.signup;
 
+import hackathon.kermmit360.common.util.finder.EntityFinder;
 import hackathon.kermmit360.global.error.ErrorCode;
 import hackathon.kermmit360.global.error.exception.CustomException;
 import hackathon.kermmit360.member.entity.MemberEntity;
@@ -17,10 +18,11 @@ public class SignupService {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
     public void signup(SignupRequestDto signupRequestDto){
-        // MemberEntity isUserExists = memberRepository.findByUsername(signupRequestDto.getUsername());
-//        if(isUserExists != null){
-//            throw new CustomException(ErrorCode.USER_EMAIL_ALREADY_EXISTS);
-//        }
+         boolean isUserExists = memberRepository.existsByUsername(signupRequestDto.getUsername());
+        if(isUserExists){
+            throw new CustomException(ErrorCode.USER_EMAIL_ALREADY_EXISTS);
+        }
+
         String encodedPassword = bCryptPasswordEncoder.encode(signupRequestDto.getPassword());
 
         MemberEntity memberEntity = MemberEntity.builder()
