@@ -67,13 +67,14 @@
 
 <!-- 특정 회원 결과 출력 -->
 <div th:if="${member != null}">
-    <h2>내 정보</h2>
     <div class="my-info-header">
-        <h2 th:text="${member.username}"></h2>
+        <h2 th:text="|${member.username} 님의 정보입니다|"></h2>
     </div>
     <ul>
         <li th:class="'tier-' + ${member.tier}">전체 순위 : <span th:text="${member.rank}"></span></li>
         <li th:class="'tier-' + ${member.tier}"><span th:text="${member.tier}"></span></li>
+        <li th:class="'tier-' + ${member.tier}">커밋 수(일간/주간/월간) : <span></span></li>
+        <li th:class="'tier-' + ${member.tier}">최근 작업 레포지토리 : <span></span></li>
         <img th:src="@{'/images/' + ${#strings.toLowerCase(member.tier)} + '.png'}" alt="티어 이미지" style="width: 40px; height: auto;">
     </ul>
 </div>
