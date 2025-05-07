@@ -1,10 +1,87 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Home Page</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kermmit 360</title>
+    <link rel="stylesheet" href="/css/home.css" />
 </head>
 <body>
-<h1>Welcome to the Home Page</h1>
+<h1>Kermmit 360</h1>
+<h1><img src="/images/kermit.png" alt="아이콘" class="icon-image"></h1>
+<!--<h1><img src="/images/logo.png" alt="아이콘" class="icon-image"></h1>-->
+
+<!-- 전체 회원 보기 -->
+<form action="/home" method="get">
+    <input type="hidden" name="action" value="list"/>
+    <button type="submit">전체 회원 보기</button>
+</form>
+
+<!-- 특정 회원 보기 -->
+<form action="/home" method="get">
+    <input type="hidden" name="action" value="detail"/>
+    <input type="text" name="memberId" placeholder="회원 ID 입력" required/>
+    <button type="submit">특정 회원 보기</button>
+</form>
+
+<!-- 나의 정보 보기 -->
+<form action="/home" method="get">
+    <input type="hidden" name="action" value="myinfo"/>
+    <button type="submit">나의 정보 보기</button>
+</form>
+
+<!-- 나의 정보 결과 출력 -->
+<div th:if="${username != null}">
+    <h2>나의 정보</h2>
+    <ul>
+        <li th:class="'tier-' + ${member.tier}">Username: <span th:text="${member.username}"></span></li>
+        <li th:class="'tier-' + ${member.tier}">Email: <span th:text="${member.email}"></span></li>
+        <li th:class="'tier-' + ${member.tier}">Push Count: <span th:text="${member.pushCount}"></span></li>
+        <li th:class="'tier-' + ${member.tier}">Tier: <span th:text="${member.tier}"></span></li>
+    </ul>
+</div>
+
+<!-- 전체 회원 결과 출력 -->
+<div th:if="${members != null}">
+    <h2>전체 회원 목록</h2>
+    <table>
+        <thead>
+        <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Push Count</th>
+            <th>Tier</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="member : ${members}"
+            th:classappend="'tier-' + ${member.tier}">
+            <td th:text="${member.username}"></td>
+            <td th:text="${member.email}"></td>
+            <td th:text="${member.pushCount}"></td>
+            <td th:text="${member.tier}"></td> <!-- tier 값 추가 -->
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- 특정 회원 결과 출력 -->
+<div th:if="${member != null}">
+    <h2>회원 상세 정보</h2>
+    <ul>
+        <li th:class="'tier-' + ${member.tier}">Username: <span th:text="${member.username}"></span></li>
+        <li th:class="'tier-' + ${member.tier}">Email: <span th:text="${member.email}"></span></li>
+        <li th:class="'tier-' + ${member.tier}">Push Count: <span th:text="${member.pushCount}"></span></li>
+        <li th:class="'tier-' + ${member.tier}">Tier: <span th:text="${member.tier}"></span></li>
+    </ul>
+</div>
+
+<!-- 나의 경험치 업데이트 버튼 -->
+<form action="/home/api/commit" method="post">
+    <input type="hidden" name="action" value="commit"/>
+    <button type="submit">내 경험치 업데이트</button>
+</form>
+
+
 </body>
 </html>

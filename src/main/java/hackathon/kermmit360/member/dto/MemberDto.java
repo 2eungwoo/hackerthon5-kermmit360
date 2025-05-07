@@ -1,6 +1,7 @@
 package hackathon.kermmit360.member.dto;
 
 import hackathon.kermmit360.member.entity.MemberEntity;
+import hackathon.kermmit360.rank.Rank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -19,11 +20,13 @@ public class MemberDto {
         private final String username;
         private final String email;
         private final int pushCount;
+        private final Rank tier;
 
         public Response(MemberEntity memberEntity){
             this.username = memberEntity.getUsername();
             this.email = memberEntity.getEmail();
             this.pushCount = memberEntity.getPushCount();
+            this.tier = memberEntity.getTier();
         }
     }
 }
