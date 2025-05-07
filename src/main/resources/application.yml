@@ -3,7 +3,9 @@ spring:
     import: optional:file:.env[.properties]
   profiles:
     active: ${PROFILES_ACTIVE}
-
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
 ---
 
 spring:
