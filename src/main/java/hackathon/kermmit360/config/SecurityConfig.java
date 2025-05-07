@@ -22,14 +22,14 @@ public class SecurityConfig {
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/login").permitAll()
-                        .defaultSuccessUrl("/commits", true)
+                        .defaultSuccessUrl("/join", true)
                 )
         ;
         return http.build();
     }
 
-    @Bean
-    public OAuth2AuthorizedClientService authorizedClientService(ClientRegistrationRepository repo) {
-        return new InMemoryOAuth2AuthorizedClientService(repo);
-    }
+//    @Bean
+//    public OAuth2AuthorizedClientService authorizedClientService(ClientRegistrationRepository repo) {
+//        return new InMemoryOAuth2AuthorizedClientService(repo);
+//    }
 }

@@ -37,29 +37,35 @@ public class LoginController {
                 .build();
 
         String username = authentication.getPrincipal().getAttribute("login");
-
+        String email = authentication.getPrincipal().getAttribute("email");
         String eventsUrl = String.format("/users/%s/events", username);
 
-        List<String> commits = webClient.get()
+        String rawJson = webClient.get()
                 .uri(eventsUrl)
                 .retrieve()
-                .bodyToFlux(Map.class)
-                .flatMap(event -> {
-                    if ("PushEvent".equals(event.get("type"))) {
-                        Map payload = (Map) event.get("payload");
-                        List<Map<String, String>> commitList = (List<Map<String, String>>) payload.get("commits");
-                        if (commitList != null) {
-                            return Flux.fromIterable(commitList)
-                                    .map(c -> c.get("message"));
-                        }
-                    }
-                    return Flux.empty();
-                })
-                .collectList()
+                .bodyToMono(String.class)
                 .block();
 
-        System.out.println(commits);
-        return ResponseEntity.ok(commits);
+//        List<String> commits = webClient.get()
+//                .uri(eventsUrl)
+//                .retrieve()
+//                .bodyToFlux(Map.class)
+//                .flatMap(event -> {
+//                    if ("PushEvent".equals(event.get("type"))) {
+//                        Map payload = (Map) event.get("payload");
+//                        List<Map<String, String>> commitList = (List<Map<String, String>>) payload.get("commits");
+//                        if (commitList != null) {
+//                            return Flux.fromIterable(commitList)
+//                                    .map(c -> c.get("message"));
+//                        }
+//                    }
+//                    return Flux.empty();
+//                })
+//                .collectList()
+//                .block();
+
+        System.out.println(rawJson);
+        return ResponseEntity.ok(rawJson);
     }
     @GetMapping("/login")
     public String loginPage() {
