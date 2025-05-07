@@ -1,0 +1,69 @@
+package hackathon.kermmit360;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
+
+import java.util.List;
+import java.util.Map;
+
+@Controller
+@RequiredArgsConstructor
+public class LoginController {
+    @Autowired
+    private OAuth2AuthorizedClientService authorizedClientService;
+
+    @GetMapping("/commits")
+    public ResponseEntity<?> getCommits(OAuth2AuthenticationToken authentication) {
+
+        OAuth2AuthorizedClient client = authorizedClientService.loadAuthorizedClient(
+                authentication.getAuthorizedClientRegistrationId(),
+                authentication.getName()
+        );
+
+        String accessToken = client.getAccessToken().getTokenValue();
+
+        WebClient webClient = WebClient.builder()
+                .baseUrl("https://api.github.com")
+                .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .build();
+
+        String username = authentication.getPrincipal().getAttribute("login");
+
+        String eventsUrl = String.format("/users/%s/events", username);
+
+        List<String> commits = webClient.get()
+                .uri(eventsUrl)
+                .retrieve()
+                .bodyToFlux(Map.class)
+                .flatMap(event -> {
+                    if ("PushEvent".equals(event.get("type"))) {
+                        Map payload = (Map) event.get("payload");
+                        List<Map<String, String>> commitList = (List<Map<String, String>>) payload.get("commits");
+                        if (commitList != null) {
+                            return Flux.fromIterable(commitList)
+                                    .map(c -> c.get("message"));
+                        }
+                    }
+                    return Flux.empty();
+                })
+                .collectList()
+                .block();
+
+        System.out.println(commits);
+        return ResponseEntity.ok(commits);
+    }
+    @GetMapping("/login")
+    public String loginPage() {
+        return "login";
+    }
+
+}
