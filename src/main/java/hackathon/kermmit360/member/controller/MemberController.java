@@ -44,8 +44,8 @@ public class MemberController {
     }
 
     @GetMapping(value = "/home", params = "action=detail")
-    public String getMemberDetail(@RequestParam Long memberId, Model model) {
-        MemberDto.Response member = memberService.getMemberById(memberId);
+    public String getMemberDetail(String username, Model model) {
+        MemberDto.Response member = memberService.getMemberById(username);
         System.out.println(">>> member: " + member);
         model.addAttribute("member", member);
         return "home";
@@ -59,6 +59,30 @@ public class MemberController {
         System.out.println(">>> member: " + member);
         model.addAttribute("member", member);
 
+        return "home";
+    }
+
+//    @GetMapping("/home")
+//    public String defaultHome(Model model,
+//                              @RequestParam(value = "username", required = false) String username) {
+//
+//        List<MemberDto.Response> memberList = memberService.getMemberList();
+//        model.addAttribute("members", memberList);
+//
+//        if (username != null) {
+//            MemberDto.Response member = memberService.getMemberById(username);
+//            model.addAttribute("member", member);
+//        }
+//
+//        return "home";
+//    }
+
+    @GetMapping("/home")
+    public String defaultHome(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        MemberDto.Response member = memberService.getMemberByUsername(username);
+        model.addAttribute("member", member);
         return "home";
     }
 }

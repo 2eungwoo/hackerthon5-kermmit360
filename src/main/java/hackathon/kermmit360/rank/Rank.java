@@ -12,27 +12,29 @@ public enum Rank {
     SILVER("실버"),
     GOLD("골드"),
     PLATINUM("플래티넘"),
-    DIAMOND("다이아몬드");
+    DIAMOND("다이아몬드"),
+    MASTER("마스터"),
+    GRANDMASTER("그랜드마스터");
 
     private final String tier;
 
     public static Rank getRank(int exp) {
+        log.info("======= getRank() exp: {}", exp);
+
         if (exp >= 0 && exp <= 2) {
-            log.info("======= getRank() exp: {}", exp);
             return BRONZE;
-        } else if (exp >= 3 && exp <= 6) {
-            log.info("======= getRank() exp: {}", exp);
+        } else if (exp <= 6) {
             return SILVER;
-        } else if (exp >= 7 && exp <= 10) {
-            log.info("======= getRank() exp: {}", exp);
+        } else if (exp <= 10) {
             return GOLD;
-        } else if (exp >= 11 && exp <=15) {
-            log.info("======= getRank() exp: {}", exp);
+        } else if (exp <= 15) {
             return PLATINUM;
-        } else if (exp >=16 ){
-            log.info("======= getRank() exp: {}", exp);
+        } else if (exp <= 25) {
             return DIAMOND;
+        } else if (exp <= 40) {
+            return MASTER;
+        } else {
+            return GRANDMASTER;
         }
-        return null;
     }
 }

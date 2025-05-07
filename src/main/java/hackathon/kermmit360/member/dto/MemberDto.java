@@ -19,14 +19,23 @@ public class MemberDto {
     public static class Response {
         private final String username;
         private final String email;
-        private final int pushCount;
+        private final int exp;
         private final Rank tier;
+        private int rank;
 
         public Response(MemberEntity memberEntity){
             this.username = memberEntity.getUsername();
             this.email = memberEntity.getEmail();
-            this.pushCount = memberEntity.getPushCount();
+            this.exp = memberEntity.getExp();
             this.tier = memberEntity.getTier();
+        }
+
+        public Response(MemberEntity memberEntity, int rank){
+            this.username = memberEntity.getUsername();
+            this.email = memberEntity.getEmail();
+            this.exp = memberEntity.getExp();
+            this.tier = memberEntity.getTier();
+            this.rank = rank;
         }
     }
 }

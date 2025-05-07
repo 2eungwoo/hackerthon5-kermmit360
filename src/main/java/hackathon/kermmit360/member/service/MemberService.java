@@ -18,25 +18,27 @@ public class MemberService {
     private final EntityFinder<MemberEntity, Long> memberFinder;
 
     @Transactional(readOnly = true)
-    public MemberDto.Response getMemberById(Long memberId){
-        MemberEntity member = memberFinder.findByIdOrThrow(memberId);
-        // todo : id -> username
-        // MemberEntity member = memberRepository.findByUsername(username);
+    public MemberDto.Response getMemberById(String username){
+        // MemberEntity member = memberFinder.findByIdOrThrow(memberId);
+        MemberEntity member = memberRepository.findByUsername(username);
         return new MemberDto.Response(member);
     }
 
     @Transactional(readOnly = true)
     public List<MemberDto.Response> getMemberList(){
-        List<MemberEntity> memberList = memberRepository.findAll();
+        List<MemberEntity> memberList = memberRepository.findAllOrderByExpDesc();
+        int[] rank = {1};
         return memberList.stream()
-                .map(MemberDto.Response::new)
+                .map(member -> new MemberDto.Response(member, rank[0]++))
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public MemberDto.Response getMemberByUsername(String username) {
         MemberEntity member = memberRepository.findByUsername(username);
-        return new MemberDto.Response(member);
+        int rank = memberRepository.findRankByUsername(username);
+        return new MemberDto.Response(member, rank);
     }
+
 
 }

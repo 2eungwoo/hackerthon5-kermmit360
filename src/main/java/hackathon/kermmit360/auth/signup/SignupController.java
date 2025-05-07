@@ -23,8 +23,4 @@ public class SignupController {
         return "redirect:/home";
     }
 
-    @GetMapping("/home")
-    public String home(){
-        return "home";
-    }
 }
