@@ -72,17 +72,27 @@
     </div>
     <ul>
         <li th:class="'tier-' + ${member.tier}">전체 순위 : <span th:text="${member.rank}"></span></li>
-        <li th:class="'tier-' + ${member.tier}"><span th:text="${member.tier}"></span></li>
-        <li th:class="'tier-' + ${member.tier}">커밋 수(일간/주간/월간) : <span></span></li>
-        <li th:class="'tier-' + ${member.tier}">최근 작업 레포지토리 : <span></span></li>
+        <li th:class="'tier-' + ${member.tier}">등급: <span th:text="${member.tier}"></span></li>
+        <li th:class="'tier-' + ${member.tier}">exp : <span th:text="${member.exp}"></span></li>
+        <li th:class="'tier-' + ${member.tier}">커밋 수(일간/주간/월간) :
+            <span th:text="${dailyCommits}">일간 커밋 수</span> /
+            <span th:text="${weeklyCommits}">주간 커밋 수</span> /
+            <span th:text="${monthlyCommits}">월간 커밋 수</span>
+        </li>
+        <li th:class="'tier-' + ${member.tier}">최근 작업 레포지토리 : <span th:text="${recentRepo}"></span></li>
         <img th:src="@{'/images/' + ${#strings.toLowerCase(member.tier)} + '.png'}" alt="티어 이미지" style="width: 40px; height: auto;">
     </ul>
 </div>
 
 <!-- 나의 경험치 업데이트 버튼 -->
-<form action="/home/api/commit" method="post">
-    <input type="hidden" name="action" value="commit"/>
-    <button type="submit">커밋....ㅎㅎ;;</button>
+<form action="/home/api/integrate" method="post">
+    <input type="hidden" name="action" value="integrate"/>
+    <button type="submit">연동하기....ㅎㅎ;;</button>
+</form>
+
+<form action="/home/api/fake-commit" method="post">
+    <input type="hidden" name="action" value="fake-commit"/>
+    <button type="submit">가짜 커밋....ㅎㅎ;;</button>
 </form>
 
 
