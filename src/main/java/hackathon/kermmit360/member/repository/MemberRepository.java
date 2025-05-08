@@ -1,5 +1,6 @@
 package hackathon.kermmit360.member.repository;
 
+import hackathon.kermmit360.member.dto.MemberDto;
 import hackathon.kermmit360.member.entity.MemberEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -20,4 +21,8 @@ public interface MemberRepository extends JpaRepository<MemberEntity, Long> {
                     "WHERE exp > (SELECT exp FROM member WHERE username = :username)",
             nativeQuery = true)
     int findRankByUsername(@Param("username") String username);
+
+    List<MemberEntity> findByGithubId(int githubId);
+
+    boolean existsByGithubId(int githubId);
 }

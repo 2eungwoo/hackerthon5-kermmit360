@@ -1,5 +1,6 @@
 package hackathon.kermmit360.config;
 
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -42,8 +43,8 @@ public class SecurityConfig {
                         .permitAll()
                 )
                 .oauth2Login(oauth2 -> oauth2
-                        .loginPage("/login").permitAll()
-                        .defaultSuccessUrl("/commits", true)
+                        .loginPage("/auth/signin").permitAll()
+                        .defaultSuccessUrl("/home", true)
                 );
 
         http
@@ -63,7 +64,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public OAuth2AuthorizedClientService authorizedClientService(ClientRegistrationRepository repo) {
-        return new InMemoryOAuth2AuthorizedClientService(repo);
+    public BCryptPasswordEncoder bCryptPasswordEncoder(){
+        return new BCryptPasswordEncoder();
     }
 }
