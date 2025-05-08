@@ -1,15 +1,10 @@
 package hackathon.kermmit360.login;
 
-import hackathon.kermmit360.global.response.ResponseCode;
-import hackathon.kermmit360.global.response.ResultResponse;
-import hackathon.kermmit360.member.dto.MemberDto;
 import hackathon.kermmit360.member.entity.MemberEntity;
 import hackathon.kermmit360.member.repository.MemberRepository;
 import hackathon.kermmit360.rank.Rank;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Service;
 

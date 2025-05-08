@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -115,7 +116,6 @@ public class LoginController {
 
             allCommitMessages.addAll(commits);
         }
-        log.info(allCommitMessages.toString());
         return ResponseEntity.ok(allCommitMessages);
     }
 }
