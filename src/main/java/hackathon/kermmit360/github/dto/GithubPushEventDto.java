@@ -19,4 +19,5 @@ public class GithubPushEventDto {
     private int commitCount;
     private List<ZonedDateTime> commitTimestamps;
     private Map<LocalDate, Integer> commitStats; // <날짜,커밋수>
+    private Map<String, Integer> languages; // <언어, 커밋 수>
 }

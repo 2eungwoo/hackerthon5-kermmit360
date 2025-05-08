@@ -38,9 +38,11 @@ public class GithubPushEventController {
 
         model.addAttribute("member", member);
         log.info("📦 GitHub Push Event DTO: {}", pushEventDto);
+        model.addAttribute("languages", pushEventDto.getLanguages());
 
         applyCommitStatsToModel(pushEventDto, model);
         prepareChartData(pushEventDto, model);
+        prepareLanguageChartData(pushEventDto, model);
 
         return "home";
     }
@@ -106,5 +108,22 @@ public class GithubPushEventController {
 
         model.addAttribute("commitDates", dates);
         model.addAttribute("commitCounts", counts);
+    }
+
+    public void prepareLanguageChartData(GithubPushEventDto dto, Model model) {
+        Map<String, Integer> languageStats = dto.getLanguages();  // 푸시 이벤트에서 언어별 커밋 비율
+        List<String> languages = new ArrayList<>();
+        List<Integer> counts = new ArrayList<>();
+
+        languageStats.entrySet().stream()
+                .forEach(entry -> {
+                    languages.add(entry.getKey());
+                    counts.add(entry.getValue());
+                });
+
+        model.addAttribute("languages", languages);
+        model.addAttribute("languageCounts", counts);
+
+        log.info("============ 언어 {}",languages);
     }
 }

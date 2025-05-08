@@ -105,6 +105,9 @@
         <div th:if="${commitDates != null}" class="commit-chart-container">
             <canvas id="commitChart" width="300" height="150"></canvas>
         </div>
+        <div th:if="${languages != null && languageCounts != null}" class="language-chart-container">
+            <canvas id="languageChart" width="300" height="150"></canvas>
+        </div>
     </ul>
 </div>
 
@@ -126,8 +129,8 @@
     const labels = /*[[${commitDates}]]*/ [];
     const data = /*[[${commitCounts}]]*/ [];
 
-    const ctx = document.getElementById('commitChart').getContext('2d');
-    const commitChart = new Chart(ctx, {
+    const commitCtx = document.getElementById('commitChart').getContext('2d'); // 변경된 변수 이름
+    const commitChart = new Chart(commitCtx, {
         type: 'line',
         data: {
             labels: labels,
@@ -169,6 +172,48 @@
                     },
                     ticks: {
                         stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+</script>
+<script th:if="${languages != null && languageCounts != null}" th:inline="javascript">
+    const languageLabels = /*[[${languages}]]*/ [];
+    const languageData = /*[[${languageCounts}]]*/ [];
+
+    // 전체 커밋 수 계산
+    const totalCommits = languageData.reduce((acc, curr) => acc + curr, 0);
+
+    // 각 언어별 비율 계산 (퍼센트로 표시)
+    const languagePercentages = languageData.map(count => ((count / totalCommits) * 100).toFixed(2));
+
+    const languageCtx = document.getElementById('languageChart').getContext('2d');
+    const languageChart = new Chart(languageCtx, {
+        type: 'pie',
+        data: {
+            labels: languageLabels,
+            datasets: [{
+                data: languageData,
+                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#FF5733', '#900C3F'],
+                hoverBackgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#FF5733', '#900C3F']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(tooltipItem) {
+                            const label = tooltipItem.label;
+                            const value = tooltipItem.raw;
+                            const percentage = languagePercentages[tooltipItem.dataIndex];
+                            return `${label}: ${value} commits (${percentage}%)`;
+                        }
                     }
                 }
             }

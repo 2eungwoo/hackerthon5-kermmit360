@@ -62,13 +62,14 @@ public class MemberController {
             member = memberService.getMemberByUsername(username);
         }
 
-        GithubPushEventDto pushEventDto = githubEventService.fetchButNoUpdateExp();
+        GithubPushEventDto pushEventDto = githubEventService.fetchAndApplyAllExp();
 
         model.addAttribute("member", member);
         log.info("📦 GitHub Push Event DTO: {}", pushEventDto);
 
         githubPushEventController.applyCommitStatsToModel(pushEventDto, model);
         githubPushEventController.prepareChartData(pushEventDto, model);
+        githubPushEventController.prepareLanguageChartData(pushEventDto, model);
 
         return getString(model, member, pushEventDto);
     }

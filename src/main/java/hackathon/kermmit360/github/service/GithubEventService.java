@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -72,11 +73,11 @@ public class GithubEventService {
 
             updateMemberExp(username, totalCommits);
 
-            return new GithubPushEventDto(username, recentRepo, lastCreatedAt, totalCommits, commitTimestamps, Map.of());
+            return new GithubPushEventDto(username, recentRepo, lastCreatedAt, totalCommits, commitTimestamps, Map.of(), Map.of());
 
         } catch (Exception e) {
             log.error("❌ GitHub 이벤트 조회 실패: {}", e.getMessage(), e);
-            return new GithubPushEventDto("", "", "", 0, null, Map.of());
+            return new GithubPushEventDto("", "", "", 0, null, Map.of(), Map.of());
         }
     }
 
@@ -115,13 +116,14 @@ public class GithubEventService {
 
             if (allRepos == null || allRepos.isEmpty()) {
                 log.warn("📂 사용자 레포 없음: {}", username);
-                return new GithubPushEventDto(username, "", "", 0, List.of(), Map.of());
+                return new GithubPushEventDto("", "", "", 0, null, Map.of(), Map.of());
             }
 
             int totalCommits = 0;
             String recentRepo = null;
             String lastCreatedAt = null;
             List<ZonedDateTime> commitTimestamps = new ArrayList<>();
+            Map<String, Integer> languages = new HashMap<>();
 
             for (Map<String, Object> repo : allRepos) {
                 String repoName = (String) repo.get("name");
@@ -138,6 +140,10 @@ public class GithubEventService {
                     if (lastCreatedAt == null || commitTime.isAfter(ZonedDateTime.parse(lastCreatedAt))) {
                         lastCreatedAt = dateStr;
                         recentRepo = repoName;
+
+                        // 언어 정보 가져오기
+                        Map<String, Integer> repoLanguages = fetchLanguagesForRepo(username, recentRepo);
+                        languages.putAll(repoLanguages); // 언어 정보 추가
                     }
                 }
 
@@ -153,90 +159,11 @@ public class GithubEventService {
                             Collectors.reducing(0, e -> 1, Integer::sum)
                     ));
 
-            return new GithubPushEventDto(username, recentRepo, lastCreatedAt, totalCommits, commitTimestamps, commitStats);
+            return new GithubPushEventDto(username, recentRepo, lastCreatedAt, totalCommits, commitTimestamps, commitStats, languages);
 
         } catch (Exception e) {
             log.error("❌ GitHub 커밋 조회 실패: {}", e.getMessage(), e);
-            return new GithubPushEventDto(username, "", "", 0, List.of(), Map.of());
-        }
-    }
-
-    @Transactional
-    public GithubPushEventDto fetchButNoUpdateExp() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        OAuth2AuthorizedClient client = null;
-        String username;
-        if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
-            username = oauthToken.getPrincipal().getAttribute("login");
-            client = authorizedClientService.loadAuthorizedClient(
-                    oauthToken.getAuthorizedClientRegistrationId(),
-                    oauthToken.getName()
-            );
-        } else {
-            username = null;
-        }
-
-        String accessToken = client.getAccessToken().getTokenValue();
-
-        try {
-            WebClient webClient = createWebClient(accessToken);
-
-            List<Map<String, Object>> allRepos = webClient.get()
-                    .uri(uriBuilder -> uriBuilder
-                            .path("/user/repos")
-                            .queryParam("per_page", 10)
-                            .queryParam("sort", "created")
-                            .queryParam("direction", "desc")
-                            .build())
-                    .headers(headers -> headers.setBearerAuth(accessToken))
-                    .retrieve()
-                    .bodyToFlux(new ParameterizedTypeReference<Map<String, Object>>() {})
-                    .collectList()
-                    .block();
-
-            if (allRepos == null || allRepos.isEmpty()) {
-                log.warn("📂 사용자 레포 없음: {}", username);
-                return new GithubPushEventDto(username, "", "", 0, List.of(), Map.of());
-            }
-
-            int totalCommits = 0;
-            String recentRepo = null;
-            String lastCreatedAt = null;
-            List<ZonedDateTime> commitTimestamps = new ArrayList<>();
-
-            for (Map<String, Object> repo : allRepos) {
-                String repoName = (String) repo.get("name");
-
-                List<Map<String, Object>> commits = fetchCommitsFromRepo(webClient, username, repoName, accessToken);
-
-                for (Map<String, Object> commit : commits) {
-                    Map<String, Object> commitInfo = (Map<String, Object>) commit.get("commit");
-                    Map<String, Object> authorInfo = (Map<String, Object>) commitInfo.get("author");
-                    String dateStr = (String) authorInfo.get("date");
-                    ZonedDateTime commitTime = ZonedDateTime.parse(dateStr);
-                    commitTimestamps.add(commitTime);
-
-                    if (lastCreatedAt == null || commitTime.isAfter(ZonedDateTime.parse(lastCreatedAt))) {
-                        lastCreatedAt = dateStr;
-                        recentRepo = repoName;
-                    }
-                }
-
-                totalCommits += commits.size();
-            }
-
-            Map<LocalDate, Integer> commitStats = commitTimestamps.stream()
-                    .map(ZonedDateTime::toLocalDate)
-                    .collect(Collectors.groupingBy(
-                            date -> date,
-                            Collectors.reducing(0, e -> 1, Integer::sum)
-                    ));
-
-            return new GithubPushEventDto(username, recentRepo, lastCreatedAt, totalCommits, commitTimestamps, commitStats);
-
-        } catch (Exception e) {
-            log.error("❌ GitHub 커밋 조회 실패: {}", e.getMessage(), e);
-            return new GithubPushEventDto(username, "", "", 0, List.of(), Map.of());
+            return new GithubPushEventDto(username, "", "", 0, List.of(), Map.of(), Map.of());
         }
     }
 
@@ -278,5 +205,25 @@ public class GithubEventService {
         log.info("🎯 [GitHub] {} 커밋 총합: {}", username, totalCommits);
         return new MemberDto.Response(member);
     }
+
+
+    // 언어 정보를 가져오는 메서드
+    public Map<String, Integer> fetchLanguagesForRepo(String username, String repoName) {
+        Map<String, Integer> languages = new HashMap<>();
+        String url = "https://api.github.com/repos/" + username + "/" + repoName + "/languages";
+
+        try {
+            ResponseEntity<Map<String, Integer>> response = restTemplate.exchange(url, HttpMethod.GET, null,
+                    new ParameterizedTypeReference<Map<String, Integer>>() {});
+            if (response.getBody() != null) {
+                languages.putAll(response.getBody());
+            }
+        } catch (Exception e) {
+            log.error("❌ 언어 정보 가져오기 실패: {}", e.getMessage(), e);
+        }
+
+        return languages;
+    }
+
 
 }
