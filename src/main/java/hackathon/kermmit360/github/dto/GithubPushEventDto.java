@@ -4,8 +4,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -16,4 +18,5 @@ public class GithubPushEventDto {
     private String createdAt;
     private int commitCount;
     private List<ZonedDateTime> commitTimestamps;
+    private Map<LocalDate, Integer> commitStats; // <날짜,커밋수>
 }

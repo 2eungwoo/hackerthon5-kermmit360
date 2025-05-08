@@ -18,18 +18,18 @@
         <button type="submit">전체 순위 보기</button>
     </form>
 
-    <form action="/home" method="get">
-        <input type="hidden" name="action" value="myinfo"/>
-        <button type="submit">나의 정보 보기</button>
+    <form action="/home/api/integrate" method="post">
+        <input type="hidden" name="action" value="integrate"/>
+        <button type="submit">내 정보 보기</button>
     </form>
+
+<!--    <form action="/home" method="get">-->
+<!--        <input type="hidden" name="action" value="myinfo"/>-->
+<!--        <button type="submit">나의 정보 보기</button>-->
+<!--    </form>-->
 
     <form action="/auth/signout" method="post" style="display:inline;">
         <button type="submit">로그아웃</button>
-    </form>
-
-    <form action="/home/api/integrate" method="post">
-        <input type="hidden" name="action" value="integrate"/>
-        <button type="submit">연동하기....ㅎㅎ;;</button>
     </form>
 
     <form action="/home/api/fake-commit" method="post">
@@ -95,6 +95,9 @@
         </li>
         <li th:class="'tier-' + ${member.tier}">최근 작업 레포지토리 : <span th:text="${recentRepo}"></span></li>
         <img th:src="@{'/images/' + ${#strings.toLowerCase(member.tier)} + '.png'}" alt="티어 이미지" style="width: 40px; height: auto;">
+        <div th:if="${commitDates != null}" class="commit-chart-container">
+            <canvas id="commitChart"></canvas>
+        </div>
     </ul>
 </div>
 
@@ -109,5 +112,59 @@
                 window.location.href = `/home?action=detail&username=${username}`;
             });
         });
+    });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script th:if="${commitDates != null}" th:inline="javascript">
+    const labels = [[${commitDates}]];
+    const data = [[${commitCounts}]];
+
+    const ctx = document.getElementById('commitChart').getContext('2d');
+    const commitChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Commits per Day',
+                data: data,
+                borderColor: 'rgba(54, 162, 235, 1)',
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: true },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.parsed.y} commits`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Date'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Number of Commits'
+                    },
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
     });
 </script>

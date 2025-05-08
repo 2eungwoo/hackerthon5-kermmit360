@@ -14,9 +14,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PostMapping;
 
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.List;
+import java.util.*;
 
 @Controller
 @RequiredArgsConstructor
@@ -28,32 +29,29 @@ public class GithubPushEventController {
     private final GithubLoginService githubLoginService;
 
     @PostMapping(value = "/home/api/integrate", params = "action=integrate")
-    public String updateMyExp(Model model) {
+    public String integrateWithGithub(Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        MemberDto.Response member = null;
+        MemberDto.Response member;
         GithubPushEventDto pushEventDto;
-        // 소셜 로그인인 경우
+
+        // 로그인 방식에 따라 분기
         if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
             String socialMember = githubLoginService.userLogin(oauthToken);
-            System.out.println(socialMember);
             member = memberService.getMemberById(socialMember);
-            // 1. 경험치 반영 + PushEvent 정보 가져오기
             pushEventDto = githubEventService.fetchAndApplyAllExp();
-        }else{// 일반 로그인
+        } else {
             String username = authentication.getName();
             member = memberService.getMemberByUsername(username);
-            // 1. 경험치 반영 + PushEvent 정보 가져오기
-            pushEventDto = githubEventService.fetchAndApplyExp(username);
+            //pushEventDto = githubEventService.fetchAndApplyExp(username);
+            pushEventDto = githubEventService.fetchAndApplyAllExp();
         }
 
-        // 2. 최신 사용자 정보 가져오기
         model.addAttribute("member", member);
-
         log.info("========= pushEvent : {}", pushEventDto);
 
-        // 3. 화면에 표시할 데이터 설정
+        // 커밋 통계 처리
         if (pushEventDto != null && pushEventDto.getCommitTimestamps() != null && !pushEventDto.getCommitTimestamps().isEmpty()) {
-            ZonedDateTime now = ZonedDateTime.now(ZoneId.of("UTC")); // 현재 시간을 UTC 기준으로 가져옴
+            ZonedDateTime now = ZonedDateTime.now(ZoneId.of("UTC"));
             List<ZonedDateTime> timestamps = pushEventDto.getCommitTimestamps();
 
             long daily = timestamps.stream()
@@ -61,11 +59,11 @@ public class GithubPushEventController {
                     .count();
 
             long weekly = timestamps.stream()
-                    .filter(t -> t.toLocalDate().isAfter(now.toLocalDate().minusDays(7)))
+                    .filter(t -> !t.toLocalDate().isBefore(now.toLocalDate().minusDays(7)))
                     .count();
 
             long monthly = timestamps.stream()
-                    .filter(t -> t.toLocalDate().isAfter(now.toLocalDate().minusMonths(1)))
+                    .filter(t -> !t.toLocalDate().isBefore(now.toLocalDate().minusMonths(1)))
                     .count();
 
             model.addAttribute("recentRepo", pushEventDto.getRepoName());
@@ -79,18 +77,35 @@ public class GithubPushEventController {
             model.addAttribute("monthlyCommits", 0);
         }
 
+        // 날짜별 커밋 수 데이터 -> Chart.js용
+        Map<LocalDate, Integer> commitStats = pushEventDto.getCommitStats();
+        List<String> dates = new ArrayList<>();
+        List<Integer> counts = new ArrayList<>();
+
+        commitStats.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .forEach(entry -> {
+                    dates.add(entry.getKey().toString());
+                    counts.add(entry.getValue());
+                });
+
+        model.addAttribute("commitDates", dates);
+        model.addAttribute("commitCounts", counts);
+
         return "home";
     }
+
     @PostMapping(value = "/home/api/fake-commit", params = "action=fake-commit")
-    public String fakeCommitEvent(Model model){
+    public String fakeCommitEvent(Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = null;
-        // 소셜 로그인인 경우
+        String username;
+
         if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
             username = githubLoginService.userLogin(oauthToken);
-        }else{// 일반 로그인
+        } else {
             username = authentication.getName();
         }
+
         System.out.println(username);
         MemberDto.Response member = githubEventService.fakeCommit(username);
         model.addAttribute("member", member);
