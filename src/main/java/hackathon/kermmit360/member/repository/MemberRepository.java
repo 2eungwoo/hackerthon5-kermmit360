@@ -22,7 +22,7 @@ public interface MemberRepository extends JpaRepository<MemberEntity, Long> {
             nativeQuery = true)
     int findRankByUsername(@Param("username") String username);
 
-    List<MemberEntity> findByGithubId(int githubId);
+    MemberEntity findByGithubId(int githubId);
 
     boolean existsByGithubId(int githubId);
 }
