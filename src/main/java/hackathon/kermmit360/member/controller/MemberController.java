@@ -98,7 +98,7 @@ public String home(Model model) {
         member = memberService.getMemberByUsername(username);
     }
 
-    GithubPushEventDto pushEventDto = githubEventService.fetchAndApplyAllExp(username);
+    GithubPushEventDto pushEventDto = githubEventService.fetchAndApplyAllExp();
     model.addAttribute("member", member);
 
     if (pushEventDto != null && pushEventDto.getCommitTimestamps() != null && !pushEventDto.getCommitTimestamps().isEmpty()) {
@@ -145,7 +145,7 @@ public String home(Model model) {
             member = memberService.getMemberByUsername(username);
         }
 
-        GithubPushEventDto pushEventDto = githubEventService.fetchAndApplyAllExp(username);
+        GithubPushEventDto pushEventDto = githubEventService.fetchAndApplyAllExp();
         model.addAttribute("member", member);
 
         if (pushEventDto != null && pushEventDto.getCommitTimestamps() != null && !pushEventDto.getCommitTimestamps().isEmpty()) {
