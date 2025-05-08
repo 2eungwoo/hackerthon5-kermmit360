@@ -12,6 +12,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PostMapping;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.List;
+
 @Controller
 @RequiredArgsConstructor
 @Slf4j
@@ -35,11 +39,26 @@ public class GithubPushEventController {
         log.info("========= pushEvent : {}", pushEventDto);
 
         // 3. 화면에 표시할 데이터 설정
-        if (pushEventDto != null) {
+        if (pushEventDto != null && pushEventDto.getCommitTimestamps() != null && !pushEventDto.getCommitTimestamps().isEmpty()) {
+            ZonedDateTime now = ZonedDateTime.now(ZoneId.of("UTC")); // 현재 시간을 UTC 기준으로 가져옴
+            List<ZonedDateTime> timestamps = pushEventDto.getCommitTimestamps();
+
+            long daily = timestamps.stream()
+                    .filter(t -> t.toLocalDate().equals(now.toLocalDate()))
+                    .count();
+
+            long weekly = timestamps.stream()
+                    .filter(t -> t.toLocalDate().isAfter(now.toLocalDate().minusDays(7)))
+                    .count();
+
+            long monthly = timestamps.stream()
+                    .filter(t -> t.toLocalDate().isAfter(now.toLocalDate().minusMonths(1)))
+                    .count();
+
             model.addAttribute("recentRepo", pushEventDto.getRepoName());
-            model.addAttribute("dailyCommits", pushEventDto.getCommitCount());
-            model.addAttribute("weeklyCommits", pushEventDto.getCommitCount());
-            model.addAttribute("monthlyCommits", pushEventDto.getCommitCount());
+            model.addAttribute("dailyCommits", daily);
+            model.addAttribute("weeklyCommits", weekly);
+            model.addAttribute("monthlyCommits", monthly);
         } else {
             model.addAttribute("recentRepo", "없음");
             model.addAttribute("dailyCommits", 0);
@@ -49,7 +68,6 @@ public class GithubPushEventController {
 
         return "home";
     }
-
     @PostMapping(value = "/home/api/fake-commit", params = "action=fake-commit")
     public String fakeCommitEvent(Model model){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
