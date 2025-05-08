@@ -5,6 +5,7 @@ import hackathon.kermmit360.global.error.ErrorCode;
 import hackathon.kermmit360.global.error.exception.CustomException;
 import hackathon.kermmit360.member.entity.MemberEntity;
 import hackathon.kermmit360.member.repository.MemberRepository;
+import hackathon.kermmit360.rank.Rank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;

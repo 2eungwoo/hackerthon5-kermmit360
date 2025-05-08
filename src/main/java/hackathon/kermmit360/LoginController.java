@@ -11,9 +11,12 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -112,10 +115,15 @@ public class LoginController {
                         return commitInfo.get("message").toString();
                     })
                     .collectList()
+                    .onErrorResume(WebClientResponseException.NotFound.class, e -> {
+                        // 404 에러 발생 시 빈 리스트 반환
+                        return Mono.just(Collections.emptyList());
+                    })
                     .block();
 
             allCommitMessages.addAll(commits);
         }
+        System.out.println(allCommitMessages);
         return ResponseEntity.ok(allCommitMessages);
     }
 }
