@@ -56,6 +56,6 @@ public class GithubPushEventController {
         String username = authentication.getName();
         MemberDto.Response member = githubEventService.fakeCommit(username);
         model.addAttribute("member", member);
-        return "/home";
+        return "home";
     }
 }
