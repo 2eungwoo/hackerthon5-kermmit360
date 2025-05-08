@@ -7,7 +7,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -15,73 +14,43 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     @Bean
-    public WebSecurityCustomizer configure(){
+    public WebSecurityCustomizer configure() {
         return web -> web.ignoring()
-                .requestMatchers(PathRequest
-                        .toStaticResources()
-                        .atCommonLocations()
-                );
+                .requestMatchers(PathRequest.toStaticResources().atCommonLocations());
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
-
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-<<<<<<< HEAD
-                .csrf(c->c.disable())
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/**","/", "/login**","/login/**").permitAll()
+                        .requestMatchers("/", "/login**", "/login/**", "/auth/signin", "/auth/signup").permitAll()
+                        .requestMatchers("/api/**").authenticated()
                         .anyRequest().authenticated()
                 )
-                .oauth2Login(oauth2 -> oauth2
-                        .loginPage("/login").permitAll()
-                        .defaultSuccessUrl("/allRepo", true)
-                )
-        ;
-        return http.build();
-    }
-
-//    @Bean
-//    public OAuth2AuthorizedClientService authorizedClientService(ClientRegistrationRepository repo) {
-//        return new InMemoryOAuth2AuthorizedClientService(repo);
-//    }
-}
-=======
-                .authorizeHttpRequests((auth)-> auth
-                                .requestMatchers("/","/auth/signin","/auth/signup").permitAll()
-                                .requestMatchers("/api/**").authenticated()
-                                .anyRequest().authenticated()
-                        //.requestMatchers("/admin").hasRole("ADMIN")
-                        //.requestMatchers("/").hasAnyRole("ADMIN","USER")
-
-                );
-
-        http
-                .formLogin((auth)->auth.loginPage("/auth/signin")
+                .formLogin(form -> form
+                        .loginPage("/auth/signin")
                         .loginProcessingUrl("/auth/signin")
-                        .defaultSuccessUrl("/home",true)
+                        .defaultSuccessUrl("/home", true)
                         .permitAll()
-                );
-
-        http
-                .logout((auth) -> auth
+                )
+                .logout(logout -> logout
                         .logoutUrl("/auth/signout")
                         .logoutSuccessUrl("/auth/signin")
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID")
                         .permitAll()
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/login").permitAll()
+                        .defaultSuccessUrl("/allRepo", true)
                 );
-
-        http
-                .csrf((auth)->auth.disable());
-
 
         return http.build();
     }
 
     @Bean
-    public BCryptPasswordEncoder bCryptPasswordEncoder(){
+    public BCryptPasswordEncoder bCryptPasswordEncoder() {
         return new BCryptPasswordEncoder();
     }
 }
->>>>>>> main-v2
