@@ -26,6 +26,16 @@
     <form action="/auth/signout" method="post" style="display:inline;">
         <button type="submit">로그아웃</button>
     </form>
+
+    <form action="/home/api/integrate" method="post">
+        <input type="hidden" name="action" value="integrate"/>
+        <button type="submit">연동하기....ㅎㅎ;;</button>
+    </form>
+
+    <form action="/home/api/fake-commit" method="post">
+        <input type="hidden" name="action" value="fake-commit"/>
+        <button type="submit">가짜 커밋....ㅎㅎ;;</button>
+    </form>
 </div>
 
 <!-- 전체 회원 결과 출력 -->
@@ -87,18 +97,6 @@
         <img th:src="@{'/images/' + ${#strings.toLowerCase(member.tier)} + '.png'}" alt="티어 이미지" style="width: 40px; height: auto;">
     </ul>
 </div>
-
-<!-- 나의 경험치 업데이트 버튼 -->
-<form action="/home/api/integrate" method="post">
-    <input type="hidden" name="action" value="integrate"/>
-    <button type="submit">연동하기....ㅎㅎ;;</button>
-</form>
-
-<form action="/home/api/fake-commit" method="post">
-    <input type="hidden" name="action" value="fake-commit"/>
-    <button type="submit">가짜 커밋....ㅎㅎ;;</button>
-</form>
-
 
 </body>
 </html>
