@@ -19,24 +19,22 @@ public class GithubLoginService {
 
     private final MemberRepository memberRepository;
 
-    @Transactional
     public String userLogin(OAuth2AuthenticationToken authentication) {
-        Integer githubId = authentication.getPrincipal().getAttribute("id");
-        log.info("==================== githubId : {}",githubId);
-        MemberEntity user = memberRepository.findByGithubId(githubId);
-        if(user != null){
-
+        Integer id = authentication.getPrincipal().getAttribute("id");
+        System.out.println(id);
+        MemberEntity user = null;
+        if(memberRepository.findByGithubId(id)!=null){
+            user = memberRepository.findByGithubId(id);
+        }else{
             user = MemberEntity.builder()
-                    .githubId(githubId)
+                    .githubId(id)
                     .username(authentication.getPrincipal().getAttribute("name"))
                     .email(authentication.getPrincipal().getAttribute("email"))
                     .role("ROLE_USER")
                     .build();
 
             memberRepository.save(user);
-            log.info("==================== saved member : {}",user);
-            return user.getUsername();
         }
-        return null;
+        return user.getUsername();
     }
 }
