@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kermmit 360</title>
+    <link rel="stylesheet" href="/css/home.css" />
+</head>
+<body>
+<h1>Kermmit 360</h1>
+<h1><img src="/images/kermit.png" alt="아이콘" class="icon-image"></h1>
+<!--<h1><img src="/images/logo.png" alt="아이콘" class="icon-image"></h1>-->
+
+<!-- 버튼 -->
+<div class="top-buttons">
+    <form action="/home" method="get">
+        <input type="hidden" name="action" value="list"/>
+        <button type="submit">전체 순위 보기</button>
+    </form>
+
+    <form action="/home" method="get">
+        <input type="hidden" name="action" value="myinfo"/>
+        <button type="submit">나의 정보 보기</button>
+    </form>
+</div>
+
+<!-- 전체 회원 결과 출력 -->
+<div th:if="${members != null}">
+    <h2>종합 랭킹</h2>
+    <table>
+        <thead>
+        <tr>
+            <th>Rank</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Exp</th>
+            <th>Tier</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="member, iterStat : ${members}"
+            th:classappend="'tier-' + ${member.tier}"
+            th:attr="data-username=${member.username}"
+            class="member-row"
+            style="cursor: pointer;">
+            <td>
+                <img th:if="${iterStat.index == 0}" src="/images/1st.png" alt="1위" style="width: 30px; height: 30px; vertical-align: middle; margin-right: 4px;">
+                <img th:if="${iterStat.index == 1}" src="/images/2nd.png" alt="2위" style="width: 30px; height: 30px; vertical-align: middle; margin-right: 4px;">
+                <img th:if="${iterStat.index == 2}" src="/images/3rd.png" alt="3위" style="width: 30px; height: 30px; vertical-align: middle; margin-right: 4px;">
+                <span th:if="${iterStat.index >= 3}" th:text="${iterStat.index + 1 + 'rd'}"></span> <!-- 4위부터는 색상을 넣지 않음 -->
+            </td>
+            <td>
+                <span th:text="${member.username}"></span>
+            </td>
+            <td th:text="${member.email}"></td>
+            <td th:text="${member.exp}"></td>
+            <td style="display: flex; flex-direction: column; align-items: center;">
+                <img th:src="@{'/images/' + ${#strings.toLowerCase(member.tier)} + '.png'}"
+                     alt="티어 이미지"
+                     style="width: 30px; height: auto; margin-bottom: 4px;">
+                <span th:text="${member.tier}"></span>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- 특정 회원 결과 출력 -->
+<div th:if="${member != null}">
+    <div class="my-info-header">
+        <h2 th:text="|${member.username} 님의 정보입니다|"></h2>
+    </div>
+    <ul>
+        <li th:class="'tier-' + ${member.tier}">전체 순위 : <span th:text="${member.rank}"></span></li>
+        <li th:class="'tier-' + ${member.tier}">등급: <span th:text="${member.tier}"></span></li>
+        <li th:class="'tier-' + ${member.tier}">exp : <span th:text="${member.exp}"></span></li>
+        <li th:class="'tier-' + ${member.tier}">커밋 수(일간/주간/월간) :
+            <span th:text="${dailyCommits}">일간 커밋 수</span> /
+            <span th:text="${weeklyCommits}">주간 커밋 수</span> /
+            <span th:text="${monthlyCommits}">월간 커밋 수</span>
+        </li>
+        <li th:class="'tier-' + ${member.tier}">최근 작업 레포지토리 : <span th:text="${recentRepo}"></span></li>
+        <img th:src="@{'/images/' + ${#strings.toLowerCase(member.tier)} + '.png'}" alt="티어 이미지" style="width: 40px; height: auto;">
+    </ul>
+</div>
+
+<!-- 나의 경험치 업데이트 버튼 -->
+<form action="/home/api/integrate" method="post">
+    <input type="hidden" name="action" value="integrate"/>
+    <button type="submit">연동하기....ㅎㅎ;;</button>
+</form>
+
+<form action="/home/api/fake-commit" method="post">
+    <input type="hidden" name="action" value="fake-commit"/>
+    <button type="submit">가짜 커밋....ㅎㅎ;;</button>
+</form>
+
+
+</body>
+</html>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const rows = document.querySelectorAll('.member-row');
+        rows.forEach(row => {
+            row.addEventListener('click', () => {
+                const username = row.getAttribute('data-username');
+                window.location.href = `/home?action=detail&username=${username}`;
+            });
+        });
+    });
+</script>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kermmit 360</title>
+
+    <!-- 부트스트랩 CSS 추가 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+    <link rel="stylesheet"  href="/css/style.css" />
+<!--    <link rel="apple-touch-icon" sizes="57x57" href="./apple-icon-57x57.png">-->
+<!--    <link rel="apple-touch-icon" sizes="60x60" href="/images/apple-icon-60x60.png">-->
+<!--    <link rel="apple-touch-icon" sizes="72x72" href="/images/apple-icon-72x72.png">-->
+<!--    <link rel="apple-touch-icon" sizes="76x76" href="/images/apple-icon-76x76.png">-->
+<!--    <link rel="apple-touch-icon" sizes="114x114" href="/images/apple-icon-114x114.png">-->
+<!--    <link rel="apple-touch-icon" sizes="120x120" href="/images/apple-icon-120x120.png">-->
+<!--    <link rel="apple-touch-icon" sizes="144x144" href="/images/apple-icon-144x144.png">-->
+<!--    <link rel="apple-touch-icon" sizes="152x152" href="/images/apple-icon-152x152.png">-->
+<!--    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-icon-180x180.png">-->
+<!--    <link rel="icon" type="image/png" sizes="192x192"  href="/images/android-icon-192x192.png">-->
+<!--    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">-->
+<!--    <link rel="icon" type="image/png" sizes="96x96" href="/images/favicon-96x96.png">-->
+<!--    <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">-->
+    <link rel="shortcut icon" href="/images/favicon.ico" />
+    <link rel="manifest" href="/manifest.json">
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="msapplication-TileImage" content="/ms-icon-144x144.png">
+    <meta name="theme-color" content="#ffffff">
+</head>
+
+<body>
+<div class="container">
+    <main class="loginMain">
+        <!--회원가입섹션-->
+        <section class="login">
+            <article class="login__form__container">
+
+                <!--회원가입 폼-->
+                <div class="login__form">
+                    <!--                    <h1><img src="/images/kermit.png" alt="아이콘" class="icon-image"></h1>-->
+                    <h1><img src="/images/logo.png" alt="아이콘" class="icon-image"></h1>
+
+                    <!--회원가입 인풋-->
+                    <form class="login__input" action="/auth/signup" method="post">
+                        <input type="text" name="username" placeholder="유저네임" required="required" />
+                        <input type="text" name="email" placeholder="이메일" required="required" />
+                        <input type="password" name="password" placeholder="패스워드" required="required" />
+                        <input type="text" name="name" placeholder="이름" required="required" />
+                        <button>가입</button>
+                    </form>
+                    <!--회원가입 인풋end-->
+                </div>
+                <!--회원가입 폼end-->
+
+                <!--계정이 있으신가요?-->
+                <div class="login__register">
+                    <span>계정이 있으신가요?</span>
+                    <a href="/auth/signin">로그인</a>
+                </div>
+                <!--계정이 있으신가요?end-->
+
+            </article>
+        </section>
+    </main>
+</div>
+</body>
+</html>
