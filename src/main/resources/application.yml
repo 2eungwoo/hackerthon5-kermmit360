@@ -3,7 +3,11 @@ spring:
     import: optional:file:.env[.properties]
   profiles:
     active: ${PROFILES_ACTIVE}
-
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    enabled: true
+    cache: false
 ---
 
 spring:
@@ -48,7 +52,7 @@ server:
 spring:
   config:
     activate:
-      on-profile: local
+      on-profile: dev
 
   datasource:
     url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
