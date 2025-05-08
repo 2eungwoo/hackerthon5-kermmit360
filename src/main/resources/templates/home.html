@@ -20,16 +20,16 @@
 
     <form action="/home/api/integrate" method="post">
         <input type="hidden" name="action" value="integrate"/>
-        <button type="submit">내 정보 보기</button>
+        <button type="submit">Github 연동 하기</button>
     </form>
-
-<!--    <form action="/home" method="get">-->
-<!--        <input type="hidden" name="action" value="myinfo"/>-->
-<!--        <button type="submit">나의 정보 보기</button>-->
-<!--    </form>-->
 
     <form action="/auth/signout" method="post" style="display:inline;">
         <button type="submit">로그아웃</button>
+    </form>
+
+    <form action="/home" method="get">
+        <input type="hidden" name="action" value="myinfo"/>
+        <button type="submit">내 정보 보기</button>
     </form>
 
     <form action="/home/api/fake-commit" method="post">
@@ -122,8 +122,8 @@
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script th:if="${commitDates != null}" th:inline="javascript">
-    const labels = [[${commitDates}]];
-    const data = [[${commitCounts}]];
+    const labels = /*[[${commitDates}]]*/ [];
+    const data = /*[[${commitCounts}]]*/ [];
 
     const ctx = document.getElementById('commitChart').getContext('2d');
     const commitChart = new Chart(ctx, {

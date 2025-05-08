@@ -51,24 +51,6 @@ public class LoginController {
                 .bodyToMono(String.class)
                 .block();
 
-//        List<String> commits = webClient.get()
-//                .uri(eventsUrl)
-//                .retrieve()
-//                .bodyToFlux(Map.class)
-//                .flatMap(event -> {
-//                    if ("PushEvent".equals(event.get("type"))) {
-//                        Map payload = (Map) event.get("payload");
-//                        List<Map<String, String>> commitList = (List<Map<String, String>>) payload.get("commits");
-//                        if (commitList != null) {
-//                            return Flux.fromIterable(commitList)
-//                                    .map(c -> c.get("message"));
-//                        }
-//                    }
-//                    return Flux.empty();
-//                })
-//                .collectList()
-//                .block();
-
         System.out.println(rawJson);
         return ResponseEntity.ok(rawJson);
     }
