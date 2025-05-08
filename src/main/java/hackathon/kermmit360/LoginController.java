@@ -23,8 +23,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Tag(name = "User API", description = "사용자 관련 API")
 public class LoginController {
-    @Autowired
-    private OAuth2AuthorizedClientService authorizedClientService;
+
+    private final OAuth2AuthorizedClientService authorizedClientService;
 
     @GetMapping("/commits")
     public ResponseEntity<?> getCommits(OAuth2AuthenticationToken authentication) {
