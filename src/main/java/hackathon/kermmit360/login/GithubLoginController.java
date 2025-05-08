@@ -26,9 +26,11 @@ public class GithubLoginController {
     @GetMapping("/join")
     @Operation(summary = "사용자 조회", description = "ID로 사용자를 조회 후 회원가입.")
     public ResponseEntity<ResultResponse> findById(OAuth2AuthenticationToken authentication) {
-        ResultResponse response = githubLoginService.userLogin(authentication);
+        String response = githubLoginService.userLogin(authentication);
+        System.out.println(response);
 //        ResultResponse response = ResultResponse.of(ResponseCode.REGISTER_SUCCESS, user);
-        return new ResponseEntity<>(response, HttpStatus.valueOf(response.getStatus()));
+        return new ResponseEntity<>(HttpStatus.OK);
+//        return null;
     }
 
 //    @PostMapping("/webhook")

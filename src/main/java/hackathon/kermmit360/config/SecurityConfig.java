@@ -7,6 +7,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -14,18 +15,20 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     @Bean
-    public WebSecurityCustomizer configure() {
+    public WebSecurityCustomizer configure(){
         return web -> web.ignoring()
-                .requestMatchers(PathRequest.toStaticResources().atCommonLocations());
+                .requestMatchers(PathRequest
+                        .toStaticResources()
+                        .atCommonLocations()
+                );
     }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
+                .csrf(c->c.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/login**", "/login/**", "/auth/signin", "/auth/signup").permitAll()
-                        .requestMatchers("/api/**").authenticated()
+                        .requestMatchers("/**","/", "/login**","/login/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
@@ -43,7 +46,7 @@ public class SecurityConfig {
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/login").permitAll()
-                        .defaultSuccessUrl("/allRepo", true)
+                        .defaultSuccessUrl("/home", true)
                 );
 
         return http.build();
