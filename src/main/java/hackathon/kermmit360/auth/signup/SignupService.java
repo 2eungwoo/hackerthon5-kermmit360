@@ -9,6 +9,7 @@ import hackathon.kermmit360.rank.Rank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -17,8 +18,9 @@ public class SignupService {
     private final MemberRepository memberRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
+    @Transactional
     public void signup(SignupRequestDto signupRequestDto){
-         boolean isUserExists = memberRepository.existsByUsername(signupRequestDto.getUsername());
+        boolean isUserExists = memberRepository.existsByUsername(signupRequestDto.getUsername());
         if(isUserExists){
             throw new CustomException(ErrorCode.USER_EMAIL_ALREADY_EXISTS);
         }
@@ -26,6 +28,7 @@ public class SignupService {
         String encodedPassword = bCryptPasswordEncoder.encode(signupRequestDto.getPassword());
 
         MemberEntity memberEntity = MemberEntity.builder()
+                .githubId(0)
                 .username(signupRequestDto.getUsername())
                 .email(signupRequestDto.getEmail())
                 .password(encodedPassword)

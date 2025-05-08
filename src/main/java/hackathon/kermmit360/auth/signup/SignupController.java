@@ -20,7 +20,7 @@ public class SignupController {
     public String signup(SignupRequestDto signupRequestDto){
         // return signupService.signup(signupRequestDto);
         signupService.signup(signupRequestDto);
-        return "redirect:/home";
+        return "redirect:/auth/signin";
     }
 
 }
