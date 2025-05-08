@@ -37,6 +37,10 @@ public class MemberController {
         List<MemberDto.Response> memberList = memberService.getMemberList();
         log.info(">>>>>>>>>>> memberList: {}", memberList);
         model.addAttribute("members", memberList);
+        model.addAttribute("recentRepo", "");
+        model.addAttribute("dailyCommits", 0);
+        model.addAttribute("weeklyCommits", 0);
+        model.addAttribute("monthlyCommits", 0);
         return "home";
     }
 
@@ -45,6 +49,10 @@ public class MemberController {
         MemberDto.Response member = memberService.getMemberById(username);
         System.out.println(">>> member: " + member);
         model.addAttribute("member", member);
+        model.addAttribute("recentRepo", "");
+        model.addAttribute("dailyCommits", 0);
+        model.addAttribute("weeklyCommits", 0);
+        model.addAttribute("monthlyCommits", 0);
         return "home";
     }
 
@@ -57,21 +65,28 @@ public class MemberController {
         if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
             username = githubLoginService.userLogin(oauthToken);
             member = memberService.getMemberByUsername(username);
+
+            GithubPushEventDto pushEventDto = githubEventService.fetchAndApplyAllExp();
+
+            model.addAttribute("member", member);
+            log.info("📦 GitHub Push Event DTO: {}", pushEventDto);
+
+            githubPushEventController.applyCommitStatsToModel(pushEventDto, model);
+            githubPushEventController.prepareChartData(pushEventDto, model);
+            githubPushEventController.prepareLanguageChartData(pushEventDto, model);
+
+            return getString(model, member, pushEventDto);
         } else {
             username = authentication.getName();
             member = memberService.getMemberByUsername(username);
+
+            model.addAttribute("member", member);
+            model.addAttribute("recentRepo", "");
+            model.addAttribute("dailyCommits", member.getExp());
+            model.addAttribute("weeklyCommits", 0);
+            model.addAttribute("monthlyCommits", 0);
+            return "home";
         }
-
-        GithubPushEventDto pushEventDto = githubEventService.fetchAndApplyAllExp();
-
-        model.addAttribute("member", member);
-        log.info("📦 GitHub Push Event DTO: {}", pushEventDto);
-
-        githubPushEventController.applyCommitStatsToModel(pushEventDto, model);
-        githubPushEventController.prepareChartData(pushEventDto, model);
-        githubPushEventController.prepareLanguageChartData(pushEventDto, model);
-
-        return getString(model, member, pushEventDto);
     }
 
     private String getString(Model model, MemberDto.Response member, GithubPushEventDto pushEventDto) {
@@ -98,8 +113,8 @@ public class MemberController {
             model.addAttribute("weeklyCommits", weekly);
             model.addAttribute("monthlyCommits", monthly);
         } else {
-            model.addAttribute("recentRepo", "없음");
-            model.addAttribute("dailyCommits", 0);
+            model.addAttribute("recentRepo", "");
+            model.addAttribute("dailyCommits", member.getExp());
             model.addAttribute("weeklyCommits", 0);
             model.addAttribute("monthlyCommits", 0);
         }

@@ -102,10 +102,10 @@
         <li th:class="'tier-' + ${member.tier}">최근 작업 레포지토리 : <span th:text="${recentRepo}"></span></li>
 
         <!-- 커밋 그래프 박스 -->
-        <div th:if="${commitDates != null}" class="commit-chart-container">
+        <div class="commit-chart-container">
             <canvas id="commitChart" width="300" height="150"></canvas>
         </div>
-        <div th:if="${languages != null && languageCounts != null}" class="language-chart-container">
+        <div class="language-chart-container">
             <canvas id="languageChart" width="300" height="150"></canvas>
         </div>
     </ul>
@@ -125,9 +125,9 @@
     });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script th:if="${commitDates != null}" th:inline="javascript">
-    const labels = /*[[${commitDates}]]*/ [];
-    const data = /*[[${commitCounts}]]*/ [];
+<script th:inline="javascript">
+    const labels = /*[[${commitDates}]]*/ null || ['2025-01-01', '2025-01-02', '2025-01-03'];
+    const data = /*[[${commitCounts}]]*/ null || [1, 2, 5];
 
     const commitCtx = document.getElementById('commitChart').getContext('2d'); // 변경된 변수 이름
     const commitChart = new Chart(commitCtx, {
@@ -178,9 +178,9 @@
         }
     });
 </script>
-<script th:if="${languages != null && languageCounts != null}" th:inline="javascript">
-    const languageLabels = /*[[${languages}]]*/ [];
-    const languageData = /*[[${languageCounts}]]*/ [];
+<script th:inline="javascript">
+    const languageLabels = /*[[${languages}]]*/ null || ['Java', 'JavaScript', 'Python'];
+    const languageData = /*[[${languageCounts}]]*/ null || [0, 0, 0];
 
     // 전체 커밋 수 계산
     const totalCommits = languageData.reduce((acc, curr) => acc + curr, 0);

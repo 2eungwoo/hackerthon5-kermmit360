@@ -54,6 +54,10 @@ public class GithubPushEventController {
 
         MemberDto.Response member = githubEventService.fakeCommit(username);
         model.addAttribute("member", member);
+        model.addAttribute("recentRepo", "fake repo");
+        model.addAttribute("dailyCommits", member.getExp());
+        model.addAttribute("weeklyCommits", 0);
+        model.addAttribute("monthlyCommits", 0);
         return "home";
     }
 
