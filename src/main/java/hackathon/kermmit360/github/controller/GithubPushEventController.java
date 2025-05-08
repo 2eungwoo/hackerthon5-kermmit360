@@ -42,7 +42,7 @@ public class GithubPushEventController {
         }
         String username = member.getUsername();
         // 1. 경험치 반영 + PushEvent 정보 가져오기
-        GithubPushEventDto pushEventDto = githubEventService.fetchAndApplyExp(username);
+        GithubPushEventDto pushEventDto = githubEventService.fetchAndApplyAllExp(username);
 
         // 2. 최신 사용자 정보 가져오기
         model.addAttribute("member", member);

@@ -103,13 +103,20 @@ public class GithubEventService {
                     .build();
 
             List<Map<String, Object>> allRepos = webClient.get()
-                    .uri("https://api.github.com/user/repos?per_page=100")
+                    .uri(uriBuilder -> uriBuilder
+                                .path("/user/repos")
+                                .queryParam("per_page", 10)
+                                .queryParam("sort", "created")       // 생성일 기준 정렬
+                                .queryParam("direction", "desc")     // 최신 순
+                                .build()
+                        )
                     .headers(headers -> headers.setBearerAuth(accessToken))
                     .retrieve()
                     .bodyToFlux(new ParameterizedTypeReference<Map<String, Object>>() {})
                     .collectList()
                     .block();
-
+            System.out.println(allRepos.get(0));
+            System.out.println(allRepos.get(1));
             if (allRepos == null || allRepos.isEmpty()) {
                 log.warn("📂 사용자 레포 없음: {}", username);
                 return new GithubPushEventDto(username, null, null, 0, List.of());
@@ -127,7 +134,7 @@ public class GithubEventService {
 
                 try {
                     List<Map<String, Object>> commits = webClient.get()
-                            .uri("https://api.github.com/repos/{owner}/{repo}/commits?author={username}&per_page=100", ownerLogin, repoName, username)
+                            .uri("/repos/{owner}/{repo}/commits?author={username}&per_page=100", ownerLogin, repoName, username)
                             .headers(headers -> headers.setBearerAuth(accessToken))
                             .retrieve()
                             .bodyToFlux(new ParameterizedTypeReference<Map<String, Object>>() {})
