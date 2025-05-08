@@ -31,18 +31,20 @@ public class GithubPushEventController {
     public String updateMyExp(Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         MemberDto.Response member = null;
+        GithubPushEventDto pushEventDto;
         // 소셜 로그인인 경우
         if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
             String socialMember = githubLoginService.userLogin(oauthToken);
             System.out.println(socialMember);
             member = memberService.getMemberById(socialMember);
+            // 1. 경험치 반영 + PushEvent 정보 가져오기
+            pushEventDto = githubEventService.fetchAndApplyAllExp();
         }else{// 일반 로그인
             String username = authentication.getName();
             member = memberService.getMemberByUsername(username);
+            // 1. 경험치 반영 + PushEvent 정보 가져오기
+            pushEventDto = githubEventService.fetchAndApplyExp(username);
         }
-        String username = member.getUsername();
-        // 1. 경험치 반영 + PushEvent 정보 가져오기
-        GithubPushEventDto pushEventDto = githubEventService.fetchAndApplyAllExp(username);
 
         // 2. 최신 사용자 정보 가져오기
         model.addAttribute("member", member);

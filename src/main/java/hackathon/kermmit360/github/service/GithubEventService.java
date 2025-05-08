@@ -20,9 +20,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -83,15 +86,19 @@ public class GithubEventService {
         }
     }
 
-    public GithubPushEventDto fetchAndApplyAllExp(String username) {
+    public GithubPushEventDto fetchAndApplyAllExp() {
         // 소셜 로그인 사용자의 client 정보
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         OAuth2AuthorizedClient client = null;
+        String username;
         if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
+            username = oauthToken.getPrincipal().getAttribute("login");
             client = authorizedClientService.loadAuthorizedClient(
                     oauthToken.getAuthorizedClientRegistrationId(),
                     oauthToken.getName()
             );
+        } else {
+            username = null;
         }
         // github 용 accessToken
         String accessToken = client.getAccessToken().getTokenValue();
@@ -115,13 +122,10 @@ public class GithubEventService {
                     .bodyToFlux(new ParameterizedTypeReference<Map<String, Object>>() {})
                     .collectList()
                     .block();
-            System.out.println(allRepos.get(0));
-            System.out.println(allRepos.get(1));
             if (allRepos == null || allRepos.isEmpty()) {
                 log.warn("📂 사용자 레포 없음: {}", username);
                 return new GithubPushEventDto(username, null, null, 0, List.of());
             }
-
             int totalCommits = 0;
             String recentRepo = null;
             String lastCreatedAt = null;
@@ -129,38 +133,37 @@ public class GithubEventService {
 
             for (Map<String, Object> repo : allRepos) {
                 String repoName = (String) repo.get("name");
-                Map<String, Object> owner = (Map<String, Object>) repo.get("owner");
-                String ownerLogin = (String) owner.get("login");
 
-                try {
-                    List<Map<String, Object>> commits = webClient.get()
-                            .uri("/repos/{owner}/{repo}/commits?author={username}&per_page=100", ownerLogin, repoName, username)
-                            .headers(headers -> headers.setBearerAuth(accessToken))
-                            .retrieve()
-                            .bodyToFlux(new ParameterizedTypeReference<Map<String, Object>>() {})
-                            .collectList()
-                            .onErrorReturn(List.of())  // 404 등 오류 시 비워줌
-                            .block();
+                List<Map<String, Object>> commits = webClient.get()
+                        .uri(uriBuilder -> uriBuilder
+                                .path("/repos/{username}/{repo}/commits")
+                                .queryParam("author", username)
+                                .build(username, repoName))
+                        .headers(headers -> headers.setBearerAuth(accessToken))
+                        .retrieve()
+                        .bodyToFlux(new ParameterizedTypeReference<Map<String, Object>>() {})
+                        .collectList()
+                        .onErrorResume(WebClientResponseException.NotFound.class, e -> Mono.just(Collections.emptyList()))
+                        .block();
 
-                    for (Map<String, Object> commit : commits) {
-                        Map<String, Object> commitInfo = (Map<String, Object>) commit.get("commit");
-                        String dateStr = ((Map<String, Object>) commitInfo.get("author")).get("date").toString();
-                        ZonedDateTime commitTime = ZonedDateTime.parse(dateStr);
-                        commitTimestamps.add(commitTime);
+                for (Map<String, Object> commit : commits) {
+                    Map<String, Object> commitInfo = (Map<String, Object>) commit.get("commit");
+                    Map<String, Object> authorInfo = (Map<String, Object>) commitInfo.get("author");
+                    String dateStr = (String) authorInfo.get("date");
+                    ZonedDateTime commitTime = ZonedDateTime.parse(dateStr);
+                    commitTimestamps.add(commitTime);
 
-                        // 가장 최근 커밋 기록
-                        if (lastCreatedAt == null || commitTime.isAfter(ZonedDateTime.parse(lastCreatedAt))) {
-                            lastCreatedAt = dateStr;
-                            recentRepo = ownerLogin + "/" + repoName;
-                        }
+                    // 최신 커밋 정보 갱신
+                    if (lastCreatedAt == null || commitTime.isAfter(ZonedDateTime.parse(lastCreatedAt))) {
+                        lastCreatedAt = dateStr;
+                        recentRepo = repoName;
                     }
-
-                    totalCommits += commits.size();
-                } catch (Exception e) {
-                    log.warn("⚠️ 커밋 조회 실패: {}/{}: {}", ownerLogin, repoName, e.getMessage());
-                    // 계속 진행
                 }
+
+                totalCommits += commits.size();
+
             }
+
 
             // 경험치 반영
             MemberEntity member = memberRepository.findByUsername(username);
