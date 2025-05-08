@@ -17,7 +17,7 @@ spring:
             client-id: Ov23liAZQIxII8L9MHMB
             client-secret: 9611c77ca15e4d71b12a773c1a0381488351ef19
             scope: repo, read:user, user:email
-            # redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
         provider:
           github:
             authorization-uri: https://github.com/login/oauth/authorize
