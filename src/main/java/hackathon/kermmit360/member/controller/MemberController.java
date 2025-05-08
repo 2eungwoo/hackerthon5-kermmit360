@@ -1,5 +1,6 @@
 package hackathon.kermmit360.member.controller;
 
+import hackathon.kermmit360.github.controller.GithubPushEventController;
 import hackathon.kermmit360.github.dto.GithubPushEventDto;
 import hackathon.kermmit360.github.service.GithubEventService;
 import hackathon.kermmit360.global.response.ResultResponse;
@@ -29,6 +30,7 @@ public class MemberController {
     private final MemberService memberService;
     private final GithubLoginService githubLoginService;
     private final GithubEventService githubEventService;
+    private final GithubPushEventController githubPushEventController;
 
     @GetMapping(value = "/home", params = "action=list")
     public String getMemberList(Model model) {
@@ -54,13 +56,24 @@ public class MemberController {
 
         if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
             username = githubLoginService.userLogin(oauthToken);
-            member = memberService.getMemberById(username);
+            member = memberService.getMemberByUsername(username);
         } else {
             username = authentication.getName();
             member = memberService.getMemberByUsername(username);
         }
 
-        GithubPushEventDto pushEventDto = githubEventService.fetchAndApplyAllExp();
+        GithubPushEventDto pushEventDto = githubEventService.fetchButNoUpdateExp();
+
+        model.addAttribute("member", member);
+        log.info("📦 GitHub Push Event DTO: {}", pushEventDto);
+
+        githubPushEventController.applyCommitStatsToModel(pushEventDto, model);
+        githubPushEventController.prepareChartData(pushEventDto, model);
+
+        return getString(model, member, pushEventDto);
+    }
+
+    private String getString(Model model, MemberDto.Response member, GithubPushEventDto pushEventDto) {
         model.addAttribute("member", member);
 
         if (pushEventDto != null && pushEventDto.getCommitTimestamps() != null && !pushEventDto.getCommitTimestamps().isEmpty()) {
@@ -107,36 +120,6 @@ public class MemberController {
             member = memberService.getMemberByUsername(username);
         }
 
-        GithubPushEventDto pushEventDto = githubEventService.fetchAndApplyAllExp();
-        model.addAttribute("member", member);
-
-        if (pushEventDto != null && pushEventDto.getCommitTimestamps() != null && !pushEventDto.getCommitTimestamps().isEmpty()) {
-            ZonedDateTime now = ZonedDateTime.now(ZoneId.of("UTC"));
-            List<ZonedDateTime> timestamps = pushEventDto.getCommitTimestamps();
-
-            long daily = timestamps.stream()
-                    .filter(t -> t.toLocalDate().equals(now.toLocalDate()))
-                    .count();
-
-            long weekly = timestamps.stream()
-                    .filter(t -> t.toLocalDate().isAfter(now.toLocalDate().minusDays(7)))
-                    .count();
-
-            long monthly = timestamps.stream()
-                    .filter(t -> t.toLocalDate().isAfter(now.toLocalDate().minusMonths(1)))
-                    .count();
-
-            model.addAttribute("recentRepo", pushEventDto.getRepoName());
-            model.addAttribute("dailyCommits", daily);
-            model.addAttribute("weeklyCommits", weekly);
-            model.addAttribute("monthlyCommits", monthly);
-        } else {
-            model.addAttribute("recentRepo", "없음");
-            model.addAttribute("dailyCommits", 0);
-            model.addAttribute("weeklyCommits", 0);
-            model.addAttribute("monthlyCommits", 0);
-        }
-
-        return "home";
+        return getString(model, member, null);
     }
 }

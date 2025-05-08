@@ -31,54 +31,69 @@ public class GithubPushEventController {
     @PostMapping(value = "/home/api/integrate", params = "action=integrate")
     public String integrateWithGithub(Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        MemberDto.Response member;
-        GithubPushEventDto pushEventDto;
 
-        // 로그인 방식에 따라 분기
-        if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
-            String socialMember = githubLoginService.userLogin(oauthToken);
-            member = memberService.getMemberById(socialMember);
-            pushEventDto = githubEventService.fetchAndApplyAllExp();
-        } else {
-            String username = authentication.getName();
-            member = memberService.getMemberByUsername(username);
-            //pushEventDto = githubEventService.fetchAndApplyExp(username);
-            pushEventDto = githubEventService.fetchAndApplyAllExp();
-        }
+        String username = resolveUsername(authentication);
+        MemberDto.Response member = memberService.getMemberByUsername(username);
+        GithubPushEventDto pushEventDto = githubEventService.fetchAndApplyAllExp();
 
         model.addAttribute("member", member);
-        log.info("========= pushEvent : {}", pushEventDto);
+        log.info("📦 GitHub Push Event DTO: {}", pushEventDto);
 
-        // 커밋 통계 처리
-        if (pushEventDto != null && pushEventDto.getCommitTimestamps() != null && !pushEventDto.getCommitTimestamps().isEmpty()) {
-            ZonedDateTime now = ZonedDateTime.now(ZoneId.of("UTC"));
-            List<ZonedDateTime> timestamps = pushEventDto.getCommitTimestamps();
+        applyCommitStatsToModel(pushEventDto, model);
+        prepareChartData(pushEventDto, model);
 
-            long daily = timestamps.stream()
-                    .filter(t -> t.toLocalDate().equals(now.toLocalDate()))
-                    .count();
+        return "home";
+    }
 
-            long weekly = timestamps.stream()
-                    .filter(t -> !t.toLocalDate().isBefore(now.toLocalDate().minusDays(7)))
-                    .count();
+    @PostMapping(value = "/home/api/fake-commit", params = "action=fake-commit")
+    public String fakeCommitEvent(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = resolveUsername(authentication);
 
-            long monthly = timestamps.stream()
-                    .filter(t -> !t.toLocalDate().isBefore(now.toLocalDate().minusMonths(1)))
-                    .count();
+        MemberDto.Response member = githubEventService.fakeCommit(username);
+        model.addAttribute("member", member);
+        return "home";
+    }
 
-            model.addAttribute("recentRepo", pushEventDto.getRepoName());
-            model.addAttribute("dailyCommits", daily);
-            model.addAttribute("weeklyCommits", weekly);
-            model.addAttribute("monthlyCommits", monthly);
-        } else {
+    public String resolveUsername(Authentication authentication) {
+        if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
+            return githubLoginService.userLogin(oauthToken);
+        }
+        return authentication.getName();
+    }
+
+    public void applyCommitStatsToModel(GithubPushEventDto dto, Model model) {
+        if (dto == null || dto.getCommitTimestamps() == null || dto.getCommitTimestamps().isEmpty()) {
             model.addAttribute("recentRepo", "없음");
             model.addAttribute("dailyCommits", 0);
             model.addAttribute("weeklyCommits", 0);
             model.addAttribute("monthlyCommits", 0);
+            return;
         }
 
-        // 날짜별 커밋 수 데이터 -> Chart.js용
-        Map<LocalDate, Integer> commitStats = pushEventDto.getCommitStats();
+        ZonedDateTime now = ZonedDateTime.now(ZoneId.of("UTC"));
+        List<ZonedDateTime> timestamps = dto.getCommitTimestamps();
+
+        long daily = timestamps.stream()
+                .filter(t -> t.toLocalDate().equals(now.toLocalDate()))
+                .count();
+
+        long weekly = timestamps.stream()
+                .filter(t -> !t.toLocalDate().isBefore(now.toLocalDate().minusDays(7)))
+                .count();
+
+        long monthly = timestamps.stream()
+                .filter(t -> !t.toLocalDate().isBefore(now.toLocalDate().minusMonths(1)))
+                .count();
+
+        model.addAttribute("recentRepo", dto.getRepoName());
+        model.addAttribute("dailyCommits", daily);
+        model.addAttribute("weeklyCommits", weekly);
+        model.addAttribute("monthlyCommits", monthly);
+    }
+
+    public void prepareChartData(GithubPushEventDto dto, Model model) {
+        Map<LocalDate, Integer> commitStats = dto.getCommitStats();
         List<String> dates = new ArrayList<>();
         List<Integer> counts = new ArrayList<>();
 
@@ -91,24 +106,5 @@ public class GithubPushEventController {
 
         model.addAttribute("commitDates", dates);
         model.addAttribute("commitCounts", counts);
-
-        return "home";
-    }
-
-    @PostMapping(value = "/home/api/fake-commit", params = "action=fake-commit")
-    public String fakeCommitEvent(Model model) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username;
-
-        if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
-            username = githubLoginService.userLogin(oauthToken);
-        } else {
-            username = authentication.getName();
-        }
-
-        System.out.println(username);
-        MemberDto.Response member = githubEventService.fakeCommit(username);
-        model.addAttribute("member", member);
-        return "/home";
     }
 }
