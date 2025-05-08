@@ -1,6 +1,8 @@
 package hackathon.kermmit360;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -12,11 +14,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Controller
 @RequiredArgsConstructor
+@Tag(name = "User API", description = "사용자 관련 API")
 public class LoginController {
     @Autowired
     private OAuth2AuthorizedClientService authorizedClientService;
@@ -67,9 +72,54 @@ public class LoginController {
         System.out.println(rawJson);
         return ResponseEntity.ok(rawJson);
     }
+
     @GetMapping("/login")
     public String loginPage() {
         return "login";
     }
 
+    @GetMapping("/allRepo")
+    public ResponseEntity<?> allRepo(OAuth2AuthenticationToken authentication) {
+        OAuth2AuthorizedClient client = authorizedClientService.loadAuthorizedClient(
+                authentication.getAuthorizedClientRegistrationId(),
+                authentication.getName()
+        );
+        String accessToken = client.getAccessToken().getTokenValue();
+
+        WebClient webClient = WebClient.builder()
+                .baseUrl("https://api.github.com")
+                .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .build();
+
+        String username = authentication.getPrincipal().getAttribute("login");
+
+        List<String> repoNames = webClient.get()
+                .uri("/user/repos", username)
+                .headers(headers -> headers.setBearerAuth(accessToken))
+                .retrieve()
+                .bodyToFlux(Map.class)
+                .map(repo -> (String) repo.get("name"))
+                .collectList()
+                .block();
+
+        List<String> allCommitMessages = new ArrayList<>();
+
+        for (String repo : repoNames) {
+            List<String> commits = webClient.get()
+                    .uri("/repos/{username}/{repo}/commits?author={username}", username, repo, username)
+                    .headers(headers -> headers.setBearerAuth(accessToken))
+                    .retrieve()
+                    .bodyToFlux(Map.class)
+                    .map(commit -> {
+                        Map commitInfo = (Map) commit.get("commit");
+                        return commitInfo.get("message").toString();
+                    })
+                    .collectList()
+                    .block();
+
+            allCommitMessages.addAll(commits);
+        }
+        log.info(allCommitMessages.toString());
+        return ResponseEntity.ok(allCommitMessages);
+    }
 }

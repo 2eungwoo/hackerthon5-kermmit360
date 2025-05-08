@@ -1,5 +1,7 @@
 package hackathon.kermmit360.login;
 
+import hackathon.kermmit360.global.response.ResponseCode;
+import hackathon.kermmit360.global.response.ResultResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -12,10 +14,10 @@ public class GithubLoginService {
     @Autowired
     private OAuth2AuthorizedClientService authorizedClientService;
 
-    public GithubUserEntity userLogin(OAuth2AuthenticationToken authentication) {
+    public ResultResponse userLogin(OAuth2AuthenticationToken authentication) {
         Integer id = authentication.getPrincipal().getAttribute("id");
         GithubUserEntity user = null;
-        if(githubLoginRepository.findByGithubId(id).size()>0){
+        if(!githubLoginRepository.findByGithubId(id).isEmpty()){
             user = githubLoginRepository.findByGithubId(id).get(0);
         }
         if(user == null){
@@ -28,8 +30,9 @@ public class GithubLoginService {
                     .build();
 
             githubLoginRepository.save(user);
+            return ResultResponse.of(ResponseCode.REGISTER_SUCCESS, user);
         }
-        return user;
+        return ResultResponse.of(ResponseCode.LOGIN_SUCCESS, user);
     }
 //    public void saveUser(UserDto dto) {
 //        User user = User.builder()

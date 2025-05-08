@@ -22,7 +22,7 @@ public class SecurityConfig {
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/login").permitAll()
-                        .defaultSuccessUrl("/join", true)
+                        .defaultSuccessUrl("/allRepo", true)
                 )
         ;
         return http.build();
