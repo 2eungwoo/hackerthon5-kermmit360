@@ -130,12 +130,12 @@ button {
     font-size: 14px;
 }
 
-/* 페이스북로그인 영역 */
+/* 깃허브 영역 */
 .login__github {
     padding: 0 40px;
     margin-top: 15px;
 }
-/*페이스북 로그인 버튼*/
+/*깃허브 로그인 버튼*/
 .login__github button {
     background-color: #fff;
     width: 100%;
@@ -144,7 +144,7 @@ button {
     font-weight: 600;
     font-size: 15px;
 }
-/*페이스북 로그인 색깔*/
+/*깃허브 로그인 색깔*/
 .login__github button i,
 span {
     color: #000000;
