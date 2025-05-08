@@ -17,19 +17,17 @@ public class GithubLoginService {
     private final MemberRepository memberRepository;
 
     public String userLogin(OAuth2AuthenticationToken authentication) {
-        Integer id = authentication.getPrincipal().getAttribute("id");
-        System.out.println(id);
+        Integer githubId = authentication.getPrincipal().getAttribute("id");
+        System.out.println(githubId);
         MemberEntity user = null;
-        if(!memberRepository.findByGithubId(id).isEmpty()){
-            user = memberRepository.findByGithubId(id).get(0);
+        if(!memberRepository.findByGithubId(githubId).isEmpty()){
+            user = memberRepository.findByGithubId(githubId).get(0);
         }else{
             user = MemberEntity.builder()
-                    .githubId(id)
+                    .githubId(githubId)
                     .username(authentication.getPrincipal().getAttribute("name"))
                     .email(authentication.getPrincipal().getAttribute("email"))
                     .role("ROLE_USER")
-                    .tier(Rank.BRONZE)
-                    .exp(0)
                     .build();
 
             memberRepository.save(user);

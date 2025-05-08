@@ -7,9 +7,7 @@ import lombok.*;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "member")
-@Builder
 public class MemberEntity {
 
     @Id
@@ -39,13 +37,14 @@ public class MemberEntity {
     private Rank tier = Rank.BRONZE;
 
     @Builder
-    public MemberEntity(String username, String email, String password, String role) {
+    public MemberEntity(String username, String email, String password, String role, int githubId) {
         this.username = username;
         this.email = email;
         this.password = password;
         this.role = role;
         this.exp = 0;
         this.tier = Rank.BRONZE;
+        this.githubId = githubId;
     }
 
     public void addPushCount() {
