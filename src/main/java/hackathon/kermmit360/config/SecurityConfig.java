@@ -24,47 +24,36 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
-
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .authorizeHttpRequests((auth)-> auth
-                                .requestMatchers("/","/auth/signin","/auth/signup").permitAll()
-                                .requestMatchers("/api/**").authenticated()
-                                .anyRequest().authenticated()
-                        //.requestMatchers("/admin").hasRole("ADMIN")
-                        //.requestMatchers("/").hasAnyRole("ADMIN","USER")
-
-                );
-
-        http
-                .formLogin((auth)->auth.loginPage("/auth/signin")
+                .csrf(c->c.disable())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/**","/", "/login**","/login/**").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .formLogin(form -> form
+                        .loginPage("/auth/signin")
                         .loginProcessingUrl("/auth/signin")
-                        .defaultSuccessUrl("/home",true)
+                        .defaultSuccessUrl("/home", true)
                         .permitAll()
                 )
-                .oauth2Login(oauth2 -> oauth2
-                        .loginPage("/auth/signin").permitAll()
-                        .defaultSuccessUrl("/home", true)
-                );
-
-        http
-                .logout((auth) -> auth
+                .logout(logout -> logout
                         .logoutUrl("/auth/signout")
-                        .logoutSuccessUrl("/")
+                        .logoutSuccessUrl("/auth/signin")
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID")
                         .permitAll()
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/login").permitAll()
+                        .defaultSuccessUrl("/home", true)
                 );
-
-        http
-                .csrf((auth)->auth.disable());
-
 
         return http.build();
     }
 
     @Bean
-    public BCryptPasswordEncoder bCryptPasswordEncoder(){
+    public BCryptPasswordEncoder bCryptPasswordEncoder() {
         return new BCryptPasswordEncoder();
     }
 }

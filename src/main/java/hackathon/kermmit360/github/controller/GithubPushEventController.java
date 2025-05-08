@@ -2,7 +2,6 @@ package hackathon.kermmit360.github.controller;
 
 import hackathon.kermmit360.github.dto.GithubPushEventDto;
 import hackathon.kermmit360.github.service.GithubEventService;
-import hackathon.kermmit360.login.GithubLoginService;
 import hackathon.kermmit360.member.dto.MemberDto;
 import hackathon.kermmit360.member.service.MemberService;
 import lombok.RequiredArgsConstructor;
