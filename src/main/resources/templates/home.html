@@ -81,9 +81,14 @@
 
 <!-- 특정 회원 결과 출력 -->
 <div th:if="${member != null}">
-    <div class="my-info-header">
-        <h2 th:text="|${member.username} 님의 정보입니다|"></h2>
+    <div class="my-info-header" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <img th:src="@{'/images/' + ${#strings.toLowerCase(member.tier)} + '.png'}"
+             alt="티어 이미지"
+             style="width: 30px; height: auto;" />
+        <h2 th:text="|${member.username}|"
+            th:class="'tier-' + ${member.tier}"></h2>
     </div>
+
     <ul>
         <li th:class="'tier-' + ${member.tier}">전체 순위 : <span th:text="${member.rank}"></span></li>
         <li th:class="'tier-' + ${member.tier}">등급: <span th:text="${member.tier}"></span></li>
@@ -94,9 +99,10 @@
             <span th:text="${monthlyCommits}">월간 커밋 수</span>
         </li>
         <li th:class="'tier-' + ${member.tier}">최근 작업 레포지토리 : <span th:text="${recentRepo}"></span></li>
-        <img th:src="@{'/images/' + ${#strings.toLowerCase(member.tier)} + '.png'}" alt="티어 이미지" style="width: 40px; height: auto;">
+
+        <!-- 커밋 그래프 박스 -->
         <div th:if="${commitDates != null}" class="commit-chart-container">
-            <canvas id="commitChart"></canvas>
+            <canvas id="commitChart" width="300" height="150"></canvas>
         </div>
     </ul>
 </div>
