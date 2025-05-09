@@ -138,4 +138,9 @@ public class MemberController {
 
         return getString(model, member, null);
     }
+
+    @GetMapping("/")
+    public String redirectToLogin() {
+        return "redirect:/auth/signin";
+    }
 }
