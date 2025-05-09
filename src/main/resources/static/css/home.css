@@ -326,3 +326,10 @@ ul li:last-child {
     padding: 6px 0;
 }
 
+
+table td:nth-child(1),  /* Rank */
+table td:nth-child(3),  /* Email */
+table td:nth-child(4) { /* Rank Point */
+    color: #000;
+    font-weight: normal;
+}
