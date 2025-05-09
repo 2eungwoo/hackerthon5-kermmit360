@@ -16,14 +16,14 @@
 <div class="top-buttons">
     <form action="/home" method="get">
         <input type="hidden" name="action" value="list"/>
-        <button type="submit">전체 순위 보기</button>
+        <button type="submit">종합 랭킹 보기</button>
     </form>
 
-    <!-- 연동하기+정보보기 -->
-    <form action="/home/api/integrate" method="post">
-        <input type="hidden" name="action" value="integrate"/>
-        <button type="submit">연동하기</button>
-    </form>
+<!--    &lt;!&ndash; 연동하기+정보보기 &ndash;&gt;-->
+<!--    <form action="/home/api/integrate" method="post">-->
+<!--        <input type="hidden" name="action" value="integrate"/>-->
+<!--        <button type="submit">연동하기</button>-->
+<!--    </form>-->
 
     <form action="/auth/signout" method="post" style="display:inline;">
         <button type="submit">로그아웃</button>
@@ -49,7 +49,7 @@
             <th>Rank</th>
             <th>Username</th>
             <th>Email</th>
-            <th>Exp</th>
+            <th>Rank Point</th>
             <th>Tier</th>
         </tr>
         </thead>
@@ -82,26 +82,54 @@
 </div>
 
 <!-- 특정 회원 결과 출력 -->
-<div th:if="${member != null}">
-    <div class="my-info-header" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-        <img th:src="@{'/images/' + ${#strings.toLowerCase(member.tier)} + '.png'}"
-             alt="티어 이미지"
-             style="width: 30px; height: auto;" />
+<div th:if="${member != null}" class="member-info-container">
+
+    <!-- 티어 이미지 -->
+    <img th:src="@{'/images/' + ${#strings.toLowerCase(member.tier)} + '.png'}"
+         alt="티어 이미지"
+         class="tier-image" />
+
+    <!-- 사용자 이름 -->
+    <div class="my-info-header">
         <h2 th:text="|${member.username}|"
-            th:class="'tier-' + ${member.tier}"></h2>
+            th:class="'tier-' + ${member.tier} + ' username'"></h2>
     </div>
 
-    <ul>
-        <li th:class="'tier-' + ${member.tier}">전체 순위 : <span th:text="${member.rank}"></span></li>
-        <li th:class="'tier-' + ${member.tier}">등급: <span th:text="${member.tier}"></span></li>
-        <li th:class="'tier-' + ${member.tier}">exp : <span th:text="${member.exp}"></span></li>
-        <li th:class="'tier-' + ${member.tier}">커밋 수(일간/주간/월간) :
-            <span th:text="${dailyCommits}">일간 커밋 수</span> /
-            <span th:text="${weeklyCommits}">주간 커밋 수</span> /
-            <span th:text="${monthlyCommits}">월간 커밋 수</span>
+    <!-- 사용자 정보 목록 -->
+    <ul class="info-list compact-info-list">
+        <li>
+            종합 랭킹 :
+            <span>
+            <img th:if="${member.rank == 1}" src="/images/1st.png" alt="1st place" class="rank-icon">
+            <img th:if="${member.rank == 2}" src="/images/2nd.png" alt="2nd place" class="rank-icon">
+            <img th:if="${member.rank == 3}" src="/images/3rd.png" alt="3rd place" class="rank-icon">
+            <span th:if="${member.rank > 3}" th:text="${member.rank + 'th'}"></span>
+        </span>
         </li>
-        <li th:class="'tier-' + ${member.tier}">최근 작업 레포지토리 : <span th:text="${recentRepo}"></span></li>
-
+        <li>
+            등급 :
+            <span class="tier-colored-text"
+                  th:text="${member.tier}"
+                  th:classappend="' tier-' + ${#strings.toUpperCase(member.tier)}">
+            </span>
+        </li>
+        <li>
+            랭크 포인트 :
+            <span th:text="${member.exp}"
+                  th:class="'tier-color tier-' + ${#strings.toLowerCase(member.tier)}"></span>
+        </li>
+        <li>
+            커밋 수 (일간 / 주간 / 월간):
+            <span th:text="${dailyCommits}"></span> /
+            <span th:text="${weeklyCommits}"></span> /
+            <span th:text="${monthlyCommits}"></span>
+        </li>
+        <li>
+            최근 작업 레포지토리 :
+            <span th:text="${recentRepo}"></span>
+        </li>
+    </ul>
+</div>
         <!-- 커밋 그래프 박스 -->
         <div class="commit-chart-container">
             <canvas id="commitChart" width="300" height="150"></canvas>

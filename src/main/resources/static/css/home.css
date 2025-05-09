@@ -270,3 +270,59 @@ ul li:last-child {
     font-size: 0.85rem;
     color: #555;
 }
+
+.member-info-container {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.tier-image {
+    display: block;
+    margin: 0 auto 10px;
+    width: 60px;
+    height: auto;
+}
+
+.my-info-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.username {
+    font-size: 1.8em;
+    font-weight: bold;
+    margin: 0;
+}
+
+.info-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.info-list li {
+    padding: 10px 0;
+    border-bottom: 1px solid #ddd;
+    font-size: 1rem;
+}
+
+.rank-icon {
+    width: 24px;
+    height: 24px;
+    vertical-align: middle;
+    margin-left: 6px;
+}
+
+/* 작아진 텍스트용 info 리스트 */
+.compact-info-list li {
+    font-size: 13px;
+    font-weight: bold;
+    padding: 6px 0;
+}
+
