@@ -28,47 +28,39 @@ public class GithubRepoDetailController {
 
     @PostMapping("/repo/{name}")
     public String getRepositoryDetail(@PathVariable String name, Model model) {
-        // 이름 기반으로 repo정보 가져오기
         GithubRepositoryDto dto = githubRepositoryDetailService.getRepoDetails(name);
-        // 참여자 정보
         List<Map<String, Object>> contributors = githubRepositoryDetailService.getRepoContributors(name);
-//        // 이슈 정보
-//        List<GithubRepositoryIssueDto> issues = githubRepositoryDetailService.getIssueStatus(name);
-//        // 상태별 이슈 분류
-//        long openIssueCount = issues.stream().filter(issue -> "open".equals(issue.getState())).count();
-//        long closedIssueCount = issues.stream().filter(issue -> "closed".equals(issue.getState())).count();
-//        long totalIssueCount = issues.size();
-
         List<GithubRepositoryCommitDto> commits = githubRepositoryDetailService.getCommitsLast7Days(name);
+
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        int totalCommits = (commits != null) ? commits.size() : 0;
 
-        // 총 커밋 수
-        int totalCommits = commits.size();
-
-        // 날짜별 커밋 수
-        Map<String, Long> commitsPerDate = commits.stream()
+        Map<String, Long> commitsPerDate = (commits != null) ? commits.stream()
                 .collect(Collectors.groupingBy(commit ->
                                 LocalDate.parse(commit.getCommit().getAuthor().getDate().substring(0, 10)).format(formatter),
-                        TreeMap::new, // 날짜 순 정렬
+                        TreeMap::new,
                         Collectors.counting()
-                ));
+                )) : Map.of();
 
-        // 날짜별 커밋 기여자 순위
-        Map<String, Map<String, Long>> dailyAuthorRanking = commits.stream()
+        Map<String, Map<String, Long>> dailyAuthorRanking = (commits != null) ? commits.stream()
                 .collect(Collectors.groupingBy(commit ->
-                                commit.getCommit().getAuthor().getDate().substring(0, 10), // 날짜
+                                commit.getCommit().getAuthor().getDate().substring(0, 10),
                         Collectors.groupingBy(commit -> {
                             GithubRepositoryCommitDto.Author author = commit.getAuthor();
                             return (author != null && author.getLogin() != null) ? author.getLogin() : "unknown";
                         }, Collectors.counting())
-                ));
+                )) : Map.of();
 
+        if(dto == null || contributors == null || commits == null
+                || totalCommits == 0 || commitsPerDate == null || dailyAuthorRanking == null){
+            model.addAttribute("repo", null);
+            model.addAttribute("contributors", null);
+            model.addAttribute("commits", 0);
+            model.addAttribute("totalCommits", 0);
+            model.addAttribute("commitsPerDate", null);
+            model.addAttribute("dailyAuthorRanking", null);
 
-        // 모델에 데이터를 추가
-//        model.addAttribute("totalIssueCount", totalIssueCount);
-//        model.addAttribute("openIssueCount", openIssueCount);
-//        model.addAttribute("closedIssueCount", closedIssueCount);
-//        model.addAttribute("issues", issues);
+        }
         model.addAttribute("repo", dto);
         model.addAttribute("contributors", contributors);
         model.addAttribute("commits", commits);
@@ -76,7 +68,6 @@ public class GithubRepoDetailController {
         model.addAttribute("commitsPerDate", commitsPerDate);
         model.addAttribute("dailyAuthorRanking", dailyAuthorRanking);
 
-        System.out.println(contributors.get(0));
-        return "repoDetail"; // detail.html로 이동
+        return "repoDetail";
     }
 }
