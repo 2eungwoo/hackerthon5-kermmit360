@@ -126,17 +126,20 @@
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script th:inline="javascript">
-    const labels = /*[[${commitDates}]]*/ null || ['2025-01-01', '2025-01-02', '2025-01-03'];
-    const data = /*[[${commitCounts}]]*/ null || [1, 2, 5];
+    const labels = /*[[${commitDates}]]*/ [];
+    const data = /*[[${commitCounts}]]*/ [];
 
-    const commitCtx = document.getElementById('commitChart').getContext('2d'); // 변경된 변수 이름
+    const safeLabels = (labels && labels.length > 0) ? labels : ['2025-01-01', '2025-01-02', '2025-01-03'];
+    const safeData = (data && data.length > 0) ? data : [1, 2, 5];
+
+    const commitCtx = document.getElementById('commitChart').getContext('2d');
     const commitChart = new Chart(commitCtx, {
         type: 'line',
         data: {
-            labels: labels,
+            labels: safeLabels,
             datasets: [{
                 label: 'Commits per Day',
-                data: data,
+                data: safeData,
                 borderColor: 'rgba(54, 162, 235, 1)',
                 backgroundColor: 'rgba(54, 162, 235, 0.2)',
                 fill: true,
@@ -179,22 +182,22 @@
     });
 </script>
 <script th:inline="javascript">
-    const languageLabels = /*[[${languages}]]*/ null || ['Java', 'JavaScript', 'Python'];
-    const languageData = /*[[${languageCounts}]]*/ null || [0, 0, 0];
+    const languageLabels = /*[[${languages}]]*/ [];
+    const languageData = /*[[${languageCounts}]]*/ [];
 
-    // 전체 커밋 수 계산
-    const totalCommits = languageData.reduce((acc, curr) => acc + curr, 0);
+    const safeLanguageLabels = (languageLabels && languageLabels.length > 0) ? languageLabels : ['Java', 'JavaScript', 'Python'];
+    const safeLanguageData = (languageData && languageData.length > 0) ? languageData : [1, 2, 3];
 
-    // 각 언어별 비율 계산 (퍼센트로 표시)
-    const languagePercentages = languageData.map(count => ((count / totalCommits) * 100).toFixed(2));
+    const totalCommits = safeLanguageData.reduce((acc, curr) => acc + curr, 0) || 1;
+    const languagePercentages = safeLanguageData.map(count => ((count / totalCommits) * 100).toFixed(2));
 
     const languageCtx = document.getElementById('languageChart').getContext('2d');
     const languageChart = new Chart(languageCtx, {
         type: 'pie',
         data: {
-            labels: languageLabels,
+            labels: safeLanguageLabels,
             datasets: [{
-                data: languageData,
+                data: safeLanguageData,
                 backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#FF5733', '#900C3F'],
                 hoverBackgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#FF5733', '#900C3F']
             }]
