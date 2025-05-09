@@ -271,20 +271,24 @@ public class GithubEventService {
     }
 
     public List<GithubRepositoryDto> getMyRepos(){
-        // 소셜 로그인 사용자의 client 정보
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         OAuth2AuthorizedClient client = null;
-        String username;
+        String username = null;
+
         if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
             username = oauthToken.getPrincipal().getAttribute("login");
             client = authorizedClientService.loadAuthorizedClient(
                     oauthToken.getAuthorizedClientRegistrationId(),
                     oauthToken.getName()
             );
-        } else {
-            username = null;
         }
-        // github 용 accessToken
+
+        // ⭐ null 처리 추가
+        if (client == null || username == null) {
+            log.warn("🔒 비로그인 상태 또는 GitHub 인증 정보 없음");
+            return List.of(); // 빈 리스트 반환
+        }
+
         String accessToken = client.getAccessToken().getTokenValue();
 
         WebClient webClient = WebClient.builder()
@@ -303,7 +307,6 @@ public class GithubEventService {
                 .bodyToFlux(GithubRepositoryDto.class)
                 .collectList()
                 .block();
-
 
         return myRepos;
     }
