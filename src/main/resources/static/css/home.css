@@ -158,6 +158,11 @@ ul li:last-child {
     font-weight: bold;
 }
 
+.tier-CHALLENGER {
+    color: #228B22; /* Deep Green */
+    font-weight: bold;
+}
+
 /* mobile size */
 @media (max-width: 768px) {
     body {
@@ -326,3 +331,10 @@ ul li:last-child {
     padding: 6px 0;
 }
 
+
+table td:nth-child(1),  /* Rank */
+table td:nth-child(3),  /* Email */
+table td:nth-child(4) { /* Rank Point */
+    color: #000;
+    font-weight: normal;
+}
