@@ -9,5 +9,4 @@ class Kermmit360ApplicationTests {
 	@Test
 	void contextLoads() {
 	}
-
 }

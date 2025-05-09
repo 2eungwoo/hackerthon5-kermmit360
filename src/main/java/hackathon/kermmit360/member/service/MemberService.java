@@ -17,6 +17,11 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final EntityFinder<MemberEntity, Long> memberFinder;
 
+    @Transactional
+    public MemberEntity findByGithubId(int id){
+        return memberRepository.findByGithubId(id);
+    }
+
     @Transactional(readOnly = true)
     public MemberDto.Response getMemberById(String username){
         // MemberEntity member = memberFinder.findByIdOrThrow(memberId);
