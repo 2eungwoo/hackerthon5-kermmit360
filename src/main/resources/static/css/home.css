@@ -216,3 +216,57 @@ ul li:last-child {
     width: 100% !important;
     height: auto !important;
 }
+
+/* 레포지토리 출력 css */
+.repo-card {
+    border: 1px solid #e1e4e8;
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.06);
+    transition: background 0.3s;
+    background-color: #fff;
+}
+
+.repo-card:hover {
+    background-color: #f9f9f9;
+}
+
+.repo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.repo-name {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #000;
+    text-decoration: none;
+}
+
+.repo-name:hover {
+    text-decoration: underline;
+}
+
+.repo-visibility {
+    font-size: 0.9rem;
+    color: #777;
+}
+
+.repo-description {
+    font-size: 0.95rem;
+    color: #555;
+    margin: 0.5rem;
+}
+
+.repo-created {
+    font-size: 0.85rem;
+    color: #999;
+    margin-top: 0.7rem;
+}
+
+.repo-meta {
+    font-size: 0.85rem;
+    color: #555;
+}

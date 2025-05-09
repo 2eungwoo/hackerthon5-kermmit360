@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Repository Detail</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link rel="stylesheet" href="/css/repoDetail.css" />
+</head>
+<body>
+    <div class="container">
+        <div class="header-section">
+            <a href="javascript:history.back()" class="back-button">
+                <i class="fas fa-arrow-left"></i>
+                <span>돌아가기</span>
+            </a>
+            <h1 th:text="${repo.name}">Repository Name</h1>
+            <div class="repo-description" th:if="${repo.description != null && !repo.description.equals('설명 없음')}"
+                 th:text="${repo.description}">
+            </div>
+            <div class="repo-meta">
+                <span class="repo-visibility" th:text="${repo.private} ? '🔒 Private' : '🌐 Public'"></span>
+                <span class="repo-language" th:if="${repo.language != null}" th:text="'🏷️ ' + ${repo.language}"></span>
+            </div>
+        </div>
+
+        <div class="contributor-section">
+            <div class="contributor-list">
+                <h2>Contributors</h2>
+                <div th:each="contributor, iterStat : ${contributors}" class="contributor-item" th:classappend="${iterStat.first} ? 'top-contributor' : ''">
+                    <img th:src="${contributor.avatar_url}" th:alt="${contributor.login}" class="contributor-avatar">
+                    <div class="contributor-info">
+                        <div class="contributor-name">
+                            <span th:if="${iterStat.first}" class="crown">👑</span>
+                            <span th:text="${contributor.login}">Username</span>
+                        </div>
+                        <div class="contributor-contributions" th:text="${contributor.contributions + ' contributions'}">Contributions</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h2>Contribution Distribution</h2>
+                <canvas id="contributionChart"></canvas>
+            </div>
+        </div>
+<!--        &lt;!&ndash; 이슈 통계 출력 &ndash;&gt;-->
+<!--        <div>-->
+<!--            <p>Total Issues: <span th:text="${totalIssueCount}"></span></p>-->
+<!--            <p>Open Issues: <span th:text="${openIssueCount}"></span></p>-->
+<!--            <p>Closed Issues: <span th:text="${closedIssueCount}"></span></p>-->
+<!--        </div>-->
+
+<!--        &lt;!&ndash; 모든 이슈 목록 출력 &ndash;&gt;-->
+<!--        <div>-->
+<!--            <h2>Issues</h2>-->
+<!--            <ul>-->
+<!--                <li th:each="issue : ${issues}">-->
+<!--                    <a th:href="${issue.url}" th:text="${issue.title}"></a>-->
+<!--                    <span th:text="'(State: ' + ${issue.state} + ')'"></span>-->
+<!--                </li>-->
+<!--            </ul>-->
+<!--        </div>-->
+        <div class="commit-section">
+            <h2>📊 커밋 통계</h2>
+
+            <!-- 총 커밋 수 -->
+            <div class="stat-card">
+                <h3>총 커밋 수</h3>
+                <div class="total-commits" th:text="${totalCommits}">0</div>
+            </div>
+
+            <!-- 날짜별 커밋 수 차트 -->
+            <div class="chart-card">
+                <h3>날짜별 커밋 수</h3>
+                <canvas id="commitsPerDateChart"></canvas>
+            </div>
+
+            <!-- 날짜별 기여자별 커밋 수 차트 -->
+            <div class="chart-card">
+                <h3>날짜별 커밋 기여자 순위</h3>
+                <div class="date-selector">
+                    <label for="dateSelect">날짜 선택:</label>
+                    <select id="dateSelect" onchange="updateAuthorChart(this.value)">
+                        <option th:each="date : ${commitsPerDate.keySet()}"
+                                th:value="${date}"
+                                th:text="${date}">날짜</option>
+                    </select>
+                </div>
+                <canvas id="dailyAuthorChart"></canvas>
+            </div>
+
+            <!-- 커밋 메시지 목록 -->
+            <div class="commit-messages">
+                <h3>📌 최근 커밋 메시지</h3>
+                <div class="commit-filters">
+                    <div class="filter-group">
+                        <label for="contributorFilter"><i class="fas fa-filter"></i> 기여자 필터</label>
+                        <select id="contributorFilter" onchange="filterCommits(this.value)">
+                            <option value="all">모든 기여자</option>
+                            <option th:each="contributor : ${contributors}"
+                                    th:value="${contributor.login}"
+                                    th:text="${contributor.login}">기여자
+                            </option>
+                        </select>
+                    </div>
+                </div>
+                <ul id="commitList">
+                    <li th:each="commit : ${commits}"
+                        th:if="${commit.author != null and commit.author.login != null}"
+                        th:data-author="${commit.author.login}"
+                        class="commit-item">
+                        <div class="commit-header">
+                            <img th:src="${commit.author.avatar_url}" th:alt="${commit.author.login}"
+                                 class="contributor-avatar">
+                            <span class="commit-author" th:text="${commit.author.login}">작성자</span>
+                            <!--                            <span class="commit-date" th:text="${#dates.format(commit.commit.author.date, 'yyyy-MM-dd HH:mm')}">날짜</span>-->
+                        </div>
+                        <a th:href="'https://github.com/' + ${repo.owner.login} + '/' + ${repo.name} + '/commit/' + ${commit.sha}"
+                           th:text="${commit.commit.message}"
+                           style="width: 100%"
+                           target="_blank">
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+
+    <script th:inline="javascript">
+        // Get contributors data from Thymeleaf
+        const contributors = /*[[${contributors}]]*/ [];
+        const commitsPerDate = /*[[${commitsPerDate}]]*/ {};
+        const dailyAuthorRanking = /*[[${dailyAuthorRanking}]]*/ {};
+
+        // Prepare data for commits per date chart
+        const dates = Object.keys(commitsPerDate);
+        const commitCounts = Object.values(commitsPerDate);
+
+        // Create commits per date chart
+        const commitsCtx = document.getElementById('commitsPerDateChart').getContext('2d');
+        new Chart(commitsCtx, {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [{
+                    label: '커밋 수',
+                    data: commitCounts,
+                    borderColor: '#0366d6',
+                    backgroundColor: 'rgba(3, 102, 214, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+
+        // Prepare data for daily author ranking chart
+        let authorChart;
+
+        function updateAuthorChart(selectedDate) {
+            const authors = dailyAuthorRanking[selectedDate] || {};
+            const authorNames = Object.keys(authors);
+            const authorCommits = Object.values(authors);
+
+            if (authorChart) {
+                authorChart.destroy();
+            }
+
+            const authorCtx = document.getElementById('dailyAuthorChart').getContext('2d');
+            authorChart = new Chart(authorCtx, {
+                type: 'bar',
+                data: {
+                    labels: authorNames,
+                    datasets: [{
+                        label: '커밋 수',
+                        data: authorCommits,
+                        backgroundColor: authorNames.map((_, i) =>
+                            `hsl(${i * 40}, 70%, 60%)`
+                        ),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: selectedDate + ' 기여자 순위'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize with the last date
+        if (dates.length > 0) {
+            document.getElementById('dateSelect').value = dates[dates.length - 1];
+            updateAuthorChart(dates[dates.length - 1]);
+        }
+
+        // Get contributors data from Thymeleaf
+        const contributorsData = /*[[${contributors}]]*/ [];
+
+        // Prepare data for chart
+        const labels = contributorsData.map(c => c.login);
+        const data = contributorsData.map(c => c.contributions);
+
+        // Generate random colors for each contributor
+        const colors = contributorsData.map(() =>
+            `hsl(${Math.random() * 360}, 70%, 50%)`
+        );
+
+        // Create pie chart
+        const ctx = document.getElementById('contributionChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: colors,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `${label}: ${value} contributions (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Confetti animation for top contributor
+        function triggerConfetti() {
+            const duration = 2 * 1000;
+            const animationEnd = Date.now() + duration;
+            const defaults = {
+                startVelocity: 15,
+                spread: 180,
+                ticks: 30,
+                zIndex: 0,
+                particleCount: 20
+            };
+
+            function randomInRange(min, max) {
+                return Math.random() * (max - min) + min;
+            }
+
+            const interval = setInterval(function() {
+                const timeLeft = animationEnd - Date.now();
+
+                if (timeLeft <= 0) {
+                    return clearInterval(interval);
+                }
+
+                const particleCount = 10 * (timeLeft / duration);
+
+                // 1등 기여자의 이름 위치에서만 터지도록 설정
+                const topContributor = document.querySelector('.top-contributor .contributor-name');
+                if (topContributor) {
+                    const rect = topContributor.getBoundingClientRect();
+                    const x = (rect.left + rect.right) / 2 / window.innerWidth;
+                    const y = (rect.top + rect.bottom) / 2 / window.innerHeight;
+
+                    confetti({
+                        ...defaults,
+                        particleCount,
+                        origin: { x, y }
+                    });
+                }
+            }, 250);
+        }
+
+        // Trigger confetti when page loads
+        window.addEventListener('load', triggerConfetti);
+
+        // 커밋 필터링 함수
+        function filterCommits(contributor) {
+            const commitItems = document.querySelectorAll('.commit-item');
+            commitItems.forEach(item => {
+                if (contributor === 'all' || item.dataset.author === contributor) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
