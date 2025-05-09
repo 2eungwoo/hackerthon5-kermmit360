@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>My GitHub Repositories</title>
+    <style>
+        body {
+            font-family: "Segoe UI", sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        h1 {
+            color: #24292e;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            background-color: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease-in-out;
+        }
+
+        li:hover {
+            transform: translateY(-3px);
+        }
+
+        a.repo-link {
+            font-weight: bold;
+            text-decoration: none;
+            color: #0366d6;
+            font-size: 18px;
+        }
+
+        p.description {
+            margin: 5px 0 0;
+            font-size: 14px;
+            color: #586069;
+        }
+
+        .repo-meta {
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        a.back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #555;
+            text-decoration: none;
+        }
+
+        a.back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<h1>My GitHub Repositories</h1>
+
+<ul>
+    <li th:each="repo : ${repos}">
+        <!-- 내부 경로로 이동 (이슈 목록 보기) -->
+        <a th:href="@{/home/github/issues/{owner}/{repo}(owner=${repo.owner.login}, repo=${repo.name})}"
+           th:text="${repo.full_name}" class="repo-link"></a>
+
+        <p class="description" th:text="${repo.description}">No description</p>
+        <div class="repo-meta" th:text="'🔄 Updated at: ' + ${repo.updated_at}"></div>
+    </li>
+</ul>
+
+<a class="back-link" href="/">← Home</a>
+</body>
+</html>
