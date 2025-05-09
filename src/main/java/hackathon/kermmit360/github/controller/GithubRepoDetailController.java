@@ -30,7 +30,7 @@ public class GithubRepoDetailController {
     public String getRepositoryDetail(@PathVariable String name, Model model) {
         GithubRepositoryDto dto = githubRepositoryDetailService.getRepoDetails(name);
         List<Map<String, Object>> contributors = githubRepositoryDetailService.getRepoContributors(name);
-        List<GithubRepositoryCommitDto> commits = githubRepositoryDetailService.getCommitsLast7Days(name);
+        List<GithubRepositoryCommitDto> commits = githubRepositoryDetailService.getCommits(name);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         int totalCommits = (commits != null) ? commits.size() : 0;

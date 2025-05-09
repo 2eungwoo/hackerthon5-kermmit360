@@ -45,6 +45,7 @@ public class GithubEventService {
     private final RestTemplate restTemplate;
     private final MemberRepository memberRepository;
     private final OAuth2AuthorizedClientService authorizedClientService;
+    private final GithubWebClientService githubWebClientService;
 
     @Transactional
     public GithubPushEventDto fetchAndApplyExp(String username) {
@@ -91,20 +92,8 @@ public class GithubEventService {
 
     @Transactional
     public GithubPushEventDto fetchAndApplyAllExp() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        OAuth2AuthorizedClient client = null;
-        String username;
-        if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
-            username = oauthToken.getPrincipal().getAttribute("login");
-            client = authorizedClientService.loadAuthorizedClient(
-                    oauthToken.getAuthorizedClientRegistrationId(),
-                    oauthToken.getName()
-            );
-        } else {
-            username = null;
-        }
-
-        String accessToken = client.getAccessToken().getTokenValue();
+        var auth = githubWebClientService.getAuthInfo();
+        var accessToken = auth.accessToken();
 
         try {
             WebClient webClient = createWebClient(accessToken);
@@ -123,7 +112,7 @@ public class GithubEventService {
                     .block();
 
             if (allRepos == null || allRepos.isEmpty()) {
-                log.warn("📂 사용자 레포 없음: {}", username);
+                log.warn("📂 사용자 레포 없음: {}", auth.username());
                 return new GithubPushEventDto("", "", "", 0, null, Map.of(), Map.of());
             }
 
@@ -136,7 +125,7 @@ public class GithubEventService {
             for (Map<String, Object> repo : allRepos) {
                 String repoName = (String) repo.get("name");
 
-                List<Map<String, Object>> commits = fetchCommitsFromRepo(webClient, username, repoName, accessToken);
+                List<Map<String, Object>> commits = fetchCommitsFromRepo(webClient, auth.username(), repoName, accessToken);
 
                 for (Map<String, Object> commit : commits) {
                     Map<String, Object> commitInfo = (Map<String, Object>) commit.get("commit");
@@ -150,7 +139,7 @@ public class GithubEventService {
                         recentRepo = repoName;
 
                         // 언어 정보 가져오기
-                        Map<String, Integer> repoLanguages = fetchLanguagesForRepo(username, recentRepo);
+                        Map<String, Integer> repoLanguages = fetchLanguagesForRepo(auth.username(), recentRepo);
                         languages.putAll(repoLanguages); // 언어 정보 추가
                     }
                 }
@@ -159,7 +148,7 @@ public class GithubEventService {
 
             }
 
-            updateMemberExp(username, totalCommits);
+            updateMemberExp(auth.username(), totalCommits);
 
             Map<LocalDate, Integer> commitStats = commitTimestamps.stream()
                     .map(ZonedDateTime::toLocalDate)
@@ -168,11 +157,11 @@ public class GithubEventService {
                             Collectors.reducing(0, e -> 1, Integer::sum)
                     ));
 
-            return new GithubPushEventDto(username, recentRepo, lastCreatedAt, totalCommits, commitTimestamps, commitStats, languages);
+            return new GithubPushEventDto(auth.username(), recentRepo, lastCreatedAt, totalCommits, commitTimestamps, commitStats, languages);
 
         } catch (Exception e) {
             log.error("❌ GitHub 커밋 조회 실패: {}", e.getMessage(), e);
-            return new GithubPushEventDto(username, "", "", 0, List.of(), Map.of(), Map.of());
+            return new GithubPushEventDto(auth.username(), "", "", 0, List.of(), Map.of(), Map.of());
         }
     }
 
