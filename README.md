@@ -1,3 +1,11 @@
+# Usage
+```bash
+$ docker pull 2eungwoo/kermmit360
+$ docker run -d --name kermmit-container -p 8080:8080 2eungwoo/kermmit360
+
+// db는 아직 로컬
+```
+
 # Contents
 
 ✔️ 주제 및 배경
