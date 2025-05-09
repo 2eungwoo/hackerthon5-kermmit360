@@ -78,18 +78,23 @@ public class GithubPushEventController {
         }
 
         ZonedDateTime now = ZonedDateTime.now(ZoneId.of("UTC"));
+        LocalDate today = now.toLocalDate();
+        LocalDate yesterday = today.minusDays(1);
         List<ZonedDateTime> timestamps = dto.getCommitTimestamps();
 
         long daily = timestamps.stream()
-                .filter(t -> t.toLocalDate().equals(now.toLocalDate()))
+                .map(ZonedDateTime::toLocalDate)
+                .filter(date -> date.equals(today) || date.equals(yesterday))
                 .count();
 
         long weekly = timestamps.stream()
-                .filter(t -> !t.toLocalDate().isBefore(now.toLocalDate().minusDays(7)))
+                .map(ZonedDateTime::toLocalDate)
+                .filter(date -> !date.isBefore(today.minusDays(7)))
                 .count();
 
         long monthly = timestamps.stream()
-                .filter(t -> !t.toLocalDate().isBefore(now.toLocalDate().minusMonths(1)))
+                .map(ZonedDateTime::toLocalDate)
+                .filter(date -> !date.isBefore(today.minusMonths(1)))
                 .count();
 
         model.addAttribute("recentRepo", dto.getRepoName());
