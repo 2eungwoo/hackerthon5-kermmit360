@@ -201,3 +201,18 @@ ul li:last-child {
         width: 100%;
     }
 }
+
+.commit-chart-container {
+    width: 100%;
+    max-width: 450px;
+    margin: 20px auto;
+    padding: 20px;
+    border: 1px solid #cceccc;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 128, 0, 0.1);
+}
+
+#commitChart {
+    width: 100% !important;
+    height: auto !important;
+}

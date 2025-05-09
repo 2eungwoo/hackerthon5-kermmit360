@@ -57,7 +57,13 @@ public class MemberEntity {
     }
 
     public void assignExp(int commitCount){
-        this.exp = commitCount;
+
+        this.exp += commitCount;
+        this.tier = Rank.getRank(this.exp);
+    }
+
+    public void updateTier(){
+        this.tier =  Rank.getRank(this.exp);
     }
 
 }

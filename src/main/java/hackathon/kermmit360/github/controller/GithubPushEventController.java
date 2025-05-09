@@ -14,9 +14,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PostMapping;
 
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.List;
+import java.util.*;
 
 @Controller
 @RequiredArgsConstructor
@@ -28,72 +29,110 @@ public class GithubPushEventController {
     private final GithubLoginService githubLoginService;
 
     @PostMapping(value = "/home/api/integrate", params = "action=integrate")
-    public String updateMyExp(Model model) {
+    public String integrateWithGithub(Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        MemberDto.Response member = null;
-        GithubPushEventDto pushEventDto;
-        // 소셜 로그인인 경우
-        if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
-            String socialMember = githubLoginService.userLogin(oauthToken);
-            System.out.println(socialMember);
-            member = memberService.getMemberById(socialMember);
-            // 1. 경험치 반영 + PushEvent 정보 가져오기
-            pushEventDto = githubEventService.fetchAndApplyAllExp();
-        }else{// 일반 로그인
-            String username = authentication.getName();
-            member = memberService.getMemberByUsername(username);
-            // 1. 경험치 반영 + PushEvent 정보 가져오기
-            pushEventDto = githubEventService.fetchAndApplyExp(username);
-        }
 
-        // 2. 최신 사용자 정보 가져오기
+        String username = resolveUsername(authentication);
+        MemberDto.Response member = memberService.getMemberByUsername(username);
+        GithubPushEventDto pushEventDto = githubEventService.fetchAndApplyAllExp();
+
         model.addAttribute("member", member);
+        log.info("📦 GitHub Push Event DTO: {}", pushEventDto);
+        model.addAttribute("languages", pushEventDto.getLanguages());
 
-        log.info("========= pushEvent : {}", pushEventDto);
+        applyCommitStatsToModel(pushEventDto, model);
+        prepareChartData(pushEventDto, model);
+        prepareLanguageChartData(pushEventDto, model);
 
-        // 3. 화면에 표시할 데이터 설정
-        if (pushEventDto != null && pushEventDto.getCommitTimestamps() != null && !pushEventDto.getCommitTimestamps().isEmpty()) {
-            ZonedDateTime now = ZonedDateTime.now(ZoneId.of("UTC")); // 현재 시간을 UTC 기준으로 가져옴
-            List<ZonedDateTime> timestamps = pushEventDto.getCommitTimestamps();
+        return "home";
+    }
 
-            long daily = timestamps.stream()
-                    .filter(t -> t.toLocalDate().equals(now.toLocalDate()))
-                    .count();
+    @PostMapping(value = "/home/api/fake-commit", params = "action=fake-commit")
+    public String fakeCommitEvent(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = resolveUsername(authentication);
 
-            long weekly = timestamps.stream()
-                    .filter(t -> t.toLocalDate().isAfter(now.toLocalDate().minusDays(7)))
-                    .count();
+        MemberDto.Response member = githubEventService.fakeCommit(username);
+        model.addAttribute("member", member);
+        model.addAttribute("recentRepo", "fake repo");
+        model.addAttribute("dailyCommits", member.getExp());
+        model.addAttribute("weeklyCommits", 0);
+        model.addAttribute("monthlyCommits", 0);
+        return "home";
+    }
 
-            long monthly = timestamps.stream()
-                    .filter(t -> t.toLocalDate().isAfter(now.toLocalDate().minusMonths(1)))
-                    .count();
+    public String resolveUsername(Authentication authentication) {
+        if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
+            return githubLoginService.userLogin(oauthToken);
+        }
+        return authentication.getName();
+    }
 
-            model.addAttribute("recentRepo", pushEventDto.getRepoName());
-            model.addAttribute("dailyCommits", daily);
-            model.addAttribute("weeklyCommits", weekly);
-            model.addAttribute("monthlyCommits", monthly);
-        } else {
+    public void applyCommitStatsToModel(GithubPushEventDto dto, Model model) {
+        if (dto == null || dto.getCommitTimestamps() == null || dto.getCommitTimestamps().isEmpty()) {
             model.addAttribute("recentRepo", "없음");
             model.addAttribute("dailyCommits", 0);
             model.addAttribute("weeklyCommits", 0);
             model.addAttribute("monthlyCommits", 0);
+            return;
         }
 
-        return "home";
+        ZonedDateTime now = ZonedDateTime.now(ZoneId.of("UTC"));
+        LocalDate today = now.toLocalDate();
+        LocalDate yesterday = today.minusDays(1);
+        List<ZonedDateTime> timestamps = dto.getCommitTimestamps();
+
+        long daily = timestamps.stream()
+                .map(ZonedDateTime::toLocalDate)
+                .filter(date -> date.equals(today) || date.equals(yesterday))
+                .count();
+
+        long weekly = timestamps.stream()
+                .map(ZonedDateTime::toLocalDate)
+                .filter(date -> !date.isBefore(today.minusDays(7)))
+                .count();
+
+        long monthly = timestamps.stream()
+                .map(ZonedDateTime::toLocalDate)
+                .filter(date -> !date.isBefore(today.minusMonths(1)))
+                .count();
+
+        model.addAttribute("recentRepo", dto.getRepoName());
+        model.addAttribute("dailyCommits", daily);
+        model.addAttribute("weeklyCommits", weekly);
+        model.addAttribute("monthlyCommits", monthly);
     }
-    @PostMapping(value = "/home/api/fake-commit", params = "action=fake-commit")
-    public String fakeCommitEvent(Model model){
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = null;
-        // 소셜 로그인인 경우
-        if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
-            username = githubLoginService.userLogin(oauthToken);
-        }else{// 일반 로그인
-            username = authentication.getName();
-        }
-        System.out.println(username);
-        MemberDto.Response member = githubEventService.fakeCommit(username);
-        model.addAttribute("member", member);
-        return "/home";
+
+    public void prepareChartData(GithubPushEventDto dto, Model model) {
+        Map<LocalDate, Integer> commitStats = dto.getCommitStats();
+        List<String> dates = new ArrayList<>();
+        List<Integer> counts = new ArrayList<>();
+
+        commitStats.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .forEach(entry -> {
+                    dates.add(entry.getKey().toString());
+                    counts.add(entry.getValue());
+                });
+
+        model.addAttribute("commitDates", dates);
+        model.addAttribute("commitCounts", counts);
+    }
+
+    public void prepareLanguageChartData(GithubPushEventDto dto, Model model) {
+        Map<String, Integer> languageStats = dto.getLanguages();  // 푸시 이벤트에서 언어별 커밋 비율
+        List<String> languages = new ArrayList<>();
+        List<Integer> counts = new ArrayList<>();
+
+        languageStats.entrySet().stream()
+                .forEach(entry -> {
+                    languages.add(entry.getKey());
+                    counts.add(entry.getValue());
+                });
+
+        model.addAttribute("languages", languages);
+        model.addAttribute("languageCounts", counts);
+
+        log.info("============ 언어 {}",languages);
     }
 }

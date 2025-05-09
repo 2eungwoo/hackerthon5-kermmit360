@@ -18,18 +18,19 @@
         <button type="submit">전체 순위 보기</button>
     </form>
 
-    <form action="/home" method="get">
-        <input type="hidden" name="action" value="myinfo"/>
-        <button type="submit">나의 정보 보기</button>
+    <!-- 연동하기+정보보기 -->
+    <form action="/home/api/integrate" method="post">
+        <input type="hidden" name="action" value="integrate"/>
+        <button type="submit">연동하기</button>
     </form>
 
     <form action="/auth/signout" method="post" style="display:inline;">
         <button type="submit">로그아웃</button>
     </form>
 
-    <form action="/home/api/integrate" method="post">
-        <input type="hidden" name="action" value="integrate"/>
-        <button type="submit">연동하기....ㅎㅎ;;</button>
+    <form action="/home" method="get">
+        <input type="hidden" name="action" value="myinfo"/>
+        <button type="submit">내 정보 보기</button>
     </form>
 
     <form action="/home/api/fake-commit" method="post">
@@ -81,9 +82,14 @@
 
 <!-- 특정 회원 결과 출력 -->
 <div th:if="${member != null}">
-    <div class="my-info-header">
-        <h2 th:text="|${member.username} 님의 정보입니다|"></h2>
+    <div class="my-info-header" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <img th:src="@{'/images/' + ${#strings.toLowerCase(member.tier)} + '.png'}"
+             alt="티어 이미지"
+             style="width: 30px; height: auto;" />
+        <h2 th:text="|${member.username}|"
+            th:class="'tier-' + ${member.tier}"></h2>
     </div>
+
     <ul>
         <li th:class="'tier-' + ${member.tier}">전체 순위 : <span th:text="${member.rank}"></span></li>
         <li th:class="'tier-' + ${member.tier}">등급: <span th:text="${member.tier}"></span></li>
@@ -94,7 +100,14 @@
             <span th:text="${monthlyCommits}">월간 커밋 수</span>
         </li>
         <li th:class="'tier-' + ${member.tier}">최근 작업 레포지토리 : <span th:text="${recentRepo}"></span></li>
-        <img th:src="@{'/images/' + ${#strings.toLowerCase(member.tier)} + '.png'}" alt="티어 이미지" style="width: 40px; height: auto;">
+
+        <!-- 커밋 그래프 박스 -->
+        <div class="commit-chart-container">
+            <canvas id="commitChart" width="300" height="150"></canvas>
+        </div>
+        <div class="language-chart-container">
+            <canvas id="languageChart" width="300" height="150"></canvas>
+        </div>
     </ul>
 </div>
 
@@ -109,5 +122,104 @@
                 window.location.href = `/home?action=detail&username=${username}`;
             });
         });
+    });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script th:inline="javascript">
+    const labels = /*[[${commitDates}]]*/ [];
+    const data = /*[[${commitCounts}]]*/ [];
+
+    const safeLabels = (labels && labels.length > 0) ? labels : ['2025-01-01', '2025-01-02', '2025-01-03'];
+    const safeData = (data && data.length > 0) ? data : [1, 2, 5];
+
+    const commitCtx = document.getElementById('commitChart').getContext('2d');
+    const commitChart = new Chart(commitCtx, {
+        type: 'line',
+        data: {
+            labels: safeLabels,
+            datasets: [{
+                label: 'Commits per Day',
+                data: safeData,
+                borderColor: 'rgba(54, 162, 235, 1)',
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: true },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.parsed.y} commits`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Date'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Number of Commits'
+                    },
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+</script>
+<script th:inline="javascript">
+    const languageLabels = /*[[${languages}]]*/ [];
+    const languageData = /*[[${languageCounts}]]*/ [];
+
+    const safeLanguageLabels = (languageLabels && languageLabels.length > 0) ? languageLabels : ['Java', 'JavaScript', 'Python'];
+    const safeLanguageData = (languageData && languageData.length > 0) ? languageData : [1, 2, 3];
+
+    const totalCommits = safeLanguageData.reduce((acc, curr) => acc + curr, 0) || 1;
+    const languagePercentages = safeLanguageData.map(count => ((count / totalCommits) * 100).toFixed(2));
+
+    const languageCtx = document.getElementById('languageChart').getContext('2d');
+    const languageChart = new Chart(languageCtx, {
+        type: 'pie',
+        data: {
+            labels: safeLanguageLabels,
+            datasets: [{
+                data: safeLanguageData,
+                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#FF5733', '#900C3F'],
+                hoverBackgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#FF5733', '#900C3F']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(tooltipItem) {
+                            const label = tooltipItem.label;
+                            const value = tooltipItem.raw;
+                            const percentage = languagePercentages[tooltipItem.dataIndex];
+                            return `${label}: ${value} commits (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
     });
 </script>
