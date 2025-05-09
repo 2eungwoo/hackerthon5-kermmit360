@@ -2,7 +2,7 @@
 ```bash
 $ docker pull 2eungwoo/kermmit360
 $ docker run -d --name kermmit360-container -p 8080:8080 2eungwoo/kermmit360
-// db는 아직 로컬
+
 ```
 
 # Contents
