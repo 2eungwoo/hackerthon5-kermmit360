@@ -1,18 +1,16 @@
 package hackathon.kermmit360.member.controller;
 
 import hackathon.kermmit360.github.dto.GithubPushEventDto;
+import hackathon.kermmit360.github.dto.GithubRepositoryDto;
 import hackathon.kermmit360.github.service.GithubEventService;
-import hackathon.kermmit360.global.response.ResultResponse;
 import hackathon.kermmit360.login.GithubLoginService;
 import hackathon.kermmit360.member.dto.MemberDto;
-import hackathon.kermmit360.member.entity.MemberEntity;
 import hackathon.kermmit360.member.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.ui.Model;
@@ -147,6 +145,10 @@ public String home(Model model) {
 
         GithubPushEventDto pushEventDto = githubEventService.fetchAndApplyAllExp();
         model.addAttribute("member", member);
+
+        List<GithubRepositoryDto> myRepos = githubEventService.getMyRepos();
+
+        model.addAttribute("repos", myRepos);
 
         if (pushEventDto != null && pushEventDto.getCommitTimestamps() != null && !pushEventDto.getCommitTimestamps().isEmpty()) {
             ZonedDateTime now = ZonedDateTime.now(ZoneId.of("UTC"));

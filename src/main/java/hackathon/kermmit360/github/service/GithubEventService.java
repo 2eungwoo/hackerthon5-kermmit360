@@ -3,6 +3,7 @@ package hackathon.kermmit360.github.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hackathon.kermmit360.github.dto.GithubPushEventDto;
+import hackathon.kermmit360.github.dto.GithubRepositoryDto;
 import hackathon.kermmit360.member.dto.MemberDto;
 import hackathon.kermmit360.member.entity.MemberEntity;
 import hackathon.kermmit360.member.repository.MemberRepository;
@@ -23,11 +24,14 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -186,5 +190,77 @@ public class GithubEventService {
         memberRepository.save(memberEntity);
         log.info("============== member exp : {}", memberEntity.getExp());
         return new MemberDto.Response(memberEntity);
+    }
+
+    public List<Map<String, Object>> getOrgs(){
+        // 소셜 로그인 사용자의 client 정보
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        OAuth2AuthorizedClient client = null;
+        String username;
+        if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
+            username = oauthToken.getPrincipal().getAttribute("login");
+            client = authorizedClientService.loadAuthorizedClient(
+                    oauthToken.getAuthorizedClientRegistrationId(),
+                    oauthToken.getName()
+            );
+        } else {
+            username = null;
+        }
+        // github 용 accessToken
+        String accessToken = client.getAccessToken().getTokenValue();
+
+        WebClient webClient = WebClient.builder()
+                .baseUrl("https://api.github.com")
+                .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .build();
+
+        List<Map<String, Object>> orgs = webClient.get()
+                .uri("/user/orgs")
+                .headers(headers -> headers.setBearerAuth(accessToken))
+                .retrieve()
+                .bodyToFlux(new ParameterizedTypeReference<Map<String, Object>>() {})
+                .collectList()
+                .block();
+
+        System.out.println(accessToken);
+        return orgs;
+    }
+
+    public List<GithubRepositoryDto> getMyRepos(){
+        // 소셜 로그인 사용자의 client 정보
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        OAuth2AuthorizedClient client = null;
+        String username;
+        if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
+            username = oauthToken.getPrincipal().getAttribute("login");
+            client = authorizedClientService.loadAuthorizedClient(
+                    oauthToken.getAuthorizedClientRegistrationId(),
+                    oauthToken.getName()
+            );
+        } else {
+            username = null;
+        }
+        // github 용 accessToken
+        String accessToken = client.getAccessToken().getTokenValue();
+
+        WebClient webClient = WebClient.builder()
+                .baseUrl("https://api.github.com")
+                .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .build();
+
+        List<GithubRepositoryDto> myRepos = webClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/user/repos")
+                        .queryParam("per_page", "100")
+                        .queryParam("sort", "created")
+                        .queryParam("direction", "desc")
+                        .build())
+                .retrieve()
+                .bodyToFlux(GithubRepositoryDto.class)
+                .collectList()
+                .block();
+
+
+        return myRepos;
     }
 }
