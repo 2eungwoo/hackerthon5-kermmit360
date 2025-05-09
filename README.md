@@ -1,4 +1,3 @@
-<!--
 # Contents
 
 ✔️ 주제 및 배경
@@ -141,5 +140,3 @@
 - github 내에서 profile → email 설정 안한 경우도 data fetch가 안됨
 
 Link : [Kermmit360](http://175.45.204.118:8081/auth/signin) 
-
---->
