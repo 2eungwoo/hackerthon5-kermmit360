@@ -28,142 +28,61 @@ import java.util.stream.Collectors;
 @Slf4j
 public class GithubRepositoryDetailService {
 
-    private final OAuth2AuthorizedClientService authorizedClientService;
+    private final GithubWebClientService githubWebClientService;
 
     public GithubRepositoryDto getRepoDetails(String repoName) {
-        // 소셜 로그인 사용자의 client 정보
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        OAuth2AuthorizedClient client = null;
-        String username;
-        if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
-            username = oauthToken.getPrincipal().getAttribute("login");
-            client = authorizedClientService.loadAuthorizedClient(
-                    oauthToken.getAuthorizedClientRegistrationId(),
-                    oauthToken.getName()
-            );
-        } else {
-            username = null;
-        }
-        // github 용 accessToken
-        String accessToken = client.getAccessToken().getTokenValue();
+        var auth = githubWebClientService.getAuthInfo();
+        var webClient = githubWebClientService.getWebClient(auth.accessToken());
 
-        WebClient webClient = WebClient.builder()
-                .baseUrl("https://api.github.com")
-                .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
-                .build();
-
-        GithubRepositoryDto repoDetail = webClient.get()
-                .uri("/repos/{owner}/{repo}", username, repoName)
+        return webClient.get()
+                .uri("/repos/{owner}/{repo}", auth.username(), repoName)
                 .retrieve()
                 .bodyToMono(GithubRepositoryDto.class)
                 .block();
-
-        return repoDetail;
     }
 
     public List<Map<String, Object>> getRepoContributors(String repoName) {
-        // 소셜 로그인 사용자의 client 정보
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        OAuth2AuthorizedClient client = null;
-        String username;
-        if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
-            username = oauthToken.getPrincipal().getAttribute("login");
-            client = authorizedClientService.loadAuthorizedClient(
-                    oauthToken.getAuthorizedClientRegistrationId(),
-                    oauthToken.getName()
-            );
-        } else {
-            username = null;
-        }
-        // github 용 accessToken
-        String accessToken = client.getAccessToken().getTokenValue();
+        var auth = githubWebClientService.getAuthInfo();
+        var webClient = githubWebClientService.getWebClient(auth.accessToken());
 
-        WebClient webClient = WebClient.builder()
-                .baseUrl("https://api.github.com")
-                .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
-                .build();
-
-        List<Map<String, Object>> contributors = webClient.get()
-                .uri("/repos/" + username + "/" + repoName + "/contributors")
+        return webClient.get()
+                .uri("/repos/{owner}/{repo}/contributors", auth.username(), repoName)
                 .retrieve()
                 .bodyToFlux(new ParameterizedTypeReference<Map<String, Object>>() {})
                 .collectList()
                 .block();
-
-        return contributors;
     }
 
     public List<GithubRepositoryIssueDto> getIssueStatus(String repoName) {
-        // 소셜 로그인 사용자의 client 정보
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        OAuth2AuthorizedClient client = null;
-        String username;
-        if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
-            username = oauthToken.getPrincipal().getAttribute("login");
-            client = authorizedClientService.loadAuthorizedClient(
-                    oauthToken.getAuthorizedClientRegistrationId(),
-                    oauthToken.getName()
-            );
-        } else {
-            username = null;
-        }
-        // github 용 accessToken
-        String accessToken = client.getAccessToken().getTokenValue();
+        var auth = githubWebClientService.getAuthInfo();
+        var webClient = githubWebClientService.getWebClient(auth.accessToken());
 
-        WebClient webClient = WebClient.builder()
-                .baseUrl("https://api.github.com")
-                .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
-                .build();
-
-        // GitHub에서 모든 이슈 데이터 가져오기
-        List<GithubRepositoryIssueDto> issues = webClient.get()
+        return webClient.get()
                 .uri(uriBuilder -> uriBuilder
-                        .path("/repos/" + username + "/" + repoName + "/issues")
-                        .queryParam("state", "all")  // 모든 이슈 가져오기
-                        .queryParam("per_page", "100")  // 최대 100개 이슈 가져오기
-                        .build())
+                        .path("/repos/{owner}/{repo}/issues")
+                        .queryParam("state", "all")
+                        .queryParam("per_page", "100")
+                        .build(auth.username(), repoName))
                 .retrieve()
                 .bodyToFlux(GithubRepositoryIssueDto.class)
                 .collectList()
                 .block();
-
-        return issues;
     }
 
-    public List<GithubRepositoryCommitDto> getCommitsLast7Days(String repoName) {
-        // 소셜 로그인 사용자의 client 정보
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        OAuth2AuthorizedClient client = null;
-        String username;
-        if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
-            username = oauthToken.getPrincipal().getAttribute("login");
-            client = authorizedClientService.loadAuthorizedClient(
-                    oauthToken.getAuthorizedClientRegistrationId(),
-                    oauthToken.getName()
-            );
-        } else {
-            username = null;
-        }
-        // github 용 accessToken
-        String accessToken = client.getAccessToken().getTokenValue();
-
-        WebClient webClient = WebClient.builder()
-                .baseUrl("https://api.github.com")
-                .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
-                .build();
+    public List<GithubRepositoryCommitDto> getCommits(String repoName) {
+        var auth = githubWebClientService.getAuthInfo();
+        var webClient = githubWebClientService.getWebClient(auth.accessToken());
 
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime since = now.minusDays(7);
-
         String sinceISO = since.format(DateTimeFormatter.ISO_DATE_TIME);
-        String untilISO = now.format(DateTimeFormatter.ISO_DATE_TIME);
 
         return webClient.get()
                 .uri(uriBuilder -> uriBuilder
-                        .path("/repos/" + username + "/" + repoName + "/commits")
+                        .path("/repos/{owner}/{repo}/commits")
                         .queryParam("per_page", "100")
                         .queryParam("page", 1)
-                        .build())
+                        .build(auth.username(), repoName))
                 .retrieve()
                 .bodyToFlux(GithubRepositoryCommitDto.class)
                 .collectList()
@@ -173,7 +92,7 @@ public class GithubRepositoryDetailService {
     public Map<String, Long> getAuthorCommitCount(List<GithubRepositoryCommitDto> commits) {
         return commits.stream()
                 .map(commit -> {
-                    GithubRepositoryCommitDto.Author author = commit.getAuthor();
+                    var author = commit.getAuthor();
                     return (author != null && author.getLogin() != null) ? author.getLogin() : "unknown";
                 })
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));

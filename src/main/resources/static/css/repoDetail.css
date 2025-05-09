@@ -12,6 +12,7 @@ body {
 .container {
     margin: 0 auto;
     padding: 2rem;
+    max-width: 900px;
 }
 .repo-detail-container {
     margin: 0 auto;
@@ -19,6 +20,7 @@ body {
     border-radius: 12px;
     padding: 2rem;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
     justify-content: center;
 }
 
@@ -100,11 +102,11 @@ a:hover {
 
 /* 참여자 영역 */
 .contributor-section {
-    margin: 2rem;
+    margin: 2rem auto;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 2rem;
-    justify-content: center;
+    max-width: 800px;
 }
 .contributor-list {
     background: white;
@@ -185,10 +187,10 @@ a:hover {
 }
 /* 커밋 통계 섹션 */
 .commit-section {
-    margin: 2rem;
+    margin: 2rem auto;
     display: grid;
     gap: 2rem;
-    justify-content: center;
+    max-width: 800px;
 }
 
 .stat-card {
@@ -377,4 +379,28 @@ a:hover {
     outline: none;
     border-color: #0366d6;
     box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.1);
+}
+
+/* 반응형 스타일 */
+@media screen and (max-width: 900px) {
+    .container {
+        padding: 1rem;
+    }
+    
+    .repo-detail-container,
+    .contributor-section,
+    .commit-section {
+        max-width: 100%;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .contributor-section {
+        grid-template-columns: 1fr;
+    }
+    
+    .repo-meta {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
 }

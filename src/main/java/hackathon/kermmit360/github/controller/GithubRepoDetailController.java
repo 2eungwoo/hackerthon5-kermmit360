@@ -39,7 +39,7 @@ public class GithubRepoDetailController {
 //        long closedIssueCount = issues.stream().filter(issue -> "closed".equals(issue.getState())).count();
 //        long totalIssueCount = issues.size();
 
-        List<GithubRepositoryCommitDto> commits = githubRepositoryDetailService.getCommitsLast7Days(name);
+        List<GithubRepositoryCommitDto> commits = githubRepositoryDetailService.getCommits(name);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         // 총 커밋 수
