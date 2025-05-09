@@ -10,6 +10,8 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class GithubWebClientService {
@@ -25,9 +27,10 @@ public class GithubWebClientService {
                     oauthToken.getName()
             );
             String accessToken = client.getAccessToken().getTokenValue();
+
             return new GithubAuthInfo(username, accessToken);
         }
-        throw new IllegalStateException("OAuth2AuthenticationToken not found.");
+        return new GithubAuthInfo(authentication.getName(), null);
     }
 
     public WebClient getWebClient(String accessToken) {

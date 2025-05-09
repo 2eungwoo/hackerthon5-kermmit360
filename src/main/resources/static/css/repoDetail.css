@@ -50,14 +50,16 @@ h2 {
     gap: 0.3rem;
 }
 .repo-description {
-    color: #586069;
-    font-size: 1.1rem;
+    color: #24292e;
+    font-size: 1.3rem;
     line-height: 1.6;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
     text-align: center;
+    font-weight: 500;
     display: flex;
     align-items: center;
     justify-content: center;
+    min-height: 50px;
 }
 .repo-meta {
     display: flex;
