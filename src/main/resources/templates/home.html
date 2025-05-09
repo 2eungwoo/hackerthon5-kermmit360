@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kermmit 360</title>
     <link rel="stylesheet" href="/css/home.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 </head>
 <body>
 <h1>Kermmit 360</h1>
@@ -110,6 +111,37 @@
         </div>
     </ul>
 </div>
+<!-- 내 레포지토리 목록 출력 -->
+<div th:if="${repos != null}" style="margin-top: 2rem; max-width: 800px; margin-left: auto; margin-right: auto;">
+    <h2>📁 내 레포지토리 목록</h2>
+    <ul th:each="repo : ${repos}" class="repo-card" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem;">
+        <li>
+            <form th:action="@{'/repo/' + ${repo.name}}" method="post">
+                <button type="submit" style="all: unset; width: 100%;">
+                    <div class="repo-header">
+                        <div class="repo-name" th:text="${repo.name}"></div>
+                        <span class="repo-visibility" th:text="${repo.private} ? '🔒 Private' : '🌐 Public'"></span>
+                    </div>
+                    <!-- 설명 -->
+                    <div class="repo-description" style="height: 50px"
+                         th:utext="${repo.description}">
+                    </div>
+                    <!-- 메타 정보 -->
+                    <div class="repo-meta">
+                        🏷️ <span th:text="'언어: ' + ${repo.language != null ? repo.language : 'N/A'}"></span> &nbsp;|&nbsp;
+                        🐛 <span th:text="'이슈: ' + ${repo.openIssuesCount}"></span>
+                        <br/>
+                        📅 <span th:text="'생성일: ' + ${#strings.substring(repo.createdAt, 0, 10)}"></span> &nbsp;|&nbsp;
+                        ♻️ <span th:text="'최종 업데이트: ' + ${#strings.substring(repo.updatedAt, 0, 10)}"></span>
+
+                    </div>
+                </button>
+            </form>
+        </li>
+
+    </ul>
+</div>
+
 
 </body>
 </html>
