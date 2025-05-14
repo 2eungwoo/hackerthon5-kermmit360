@@ -1,3 +1,10 @@
+# Usage
+```bash
+$ docker pull 2eungwoo/kermmit360
+$ docker run -d --name kermmit360-container -p 8080:8080 2eungwoo/kermmit360
+
+```
+
 # Contents
 
 ✔️ 주제 및 배경
